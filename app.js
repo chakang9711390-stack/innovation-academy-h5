@@ -153,6 +153,36 @@ function isValidHttpsUrl(value) {
   }
 }
 
+function isVideoUrl(value) {
+  try {
+    const { pathname } = new URL(value);
+    return /\.(mp4|webm|ogg|mov|m4v)$/i.test(pathname);
+  } catch {
+    return false;
+  }
+}
+
+function closeReplayModal() {
+  $("#replayModal").classList.remove("is-visible");
+  $("#replayModal").setAttribute("aria-hidden", "true");
+  $("#replayFrame").innerHTML = "";
+  $("#openReplayExternal").removeAttribute("data-url");
+}
+
+function openReplayModal(course) {
+  if (!course.replayUrl || !isValidHttpsUrl(course.replayUrl)) {
+    showToast("回放链接格式异常，请联系管理员");
+    return;
+  }
+  $("#replayTitle").textContent = course.title;
+  $("#openReplayExternal").dataset.url = course.replayUrl;
+  $("#replayFrame").innerHTML = isVideoUrl(course.replayUrl)
+    ? `<video class="replay-video" src="${course.replayUrl}" controls autoplay playsinline></video>`
+    : `<iframe class="replay-iframe" src="${course.replayUrl}" title="${course.title}" allow="fullscreen; autoplay; clipboard-read; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  $("#replayModal").classList.add("is-visible");
+  $("#replayModal").setAttribute("aria-hidden", "false");
+}
+
 async function apiFetch(path, options = {}) {
   const headers = { "content-type": "application/json", ...(options.headers || {}) };
   if (state.token) headers.authorization = `Bearer ${state.token}`;
@@ -646,7 +676,7 @@ function bindEvents() {
       state.watched.add(course.id);
       showToast("正在打开回放");
       apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action: "watch", courseId: course.id }) }).catch((error) => showToast(error.message));
-      if (course.replayUrl) window.open(course.replayUrl, "_blank");
+      if (course.replayUrl) openReplayModal(course);
       renderRecords();
     }
     if (action === "download") {
@@ -756,6 +786,20 @@ function bindEvents() {
   });
 
   $("#cancelEdit").addEventListener("click", resetCourseForm);
+
+  $("#closeReplay").addEventListener("click", closeReplayModal);
+  $("#replayModal").addEventListener("click", (event) => {
+    if (event.target.id === "replayModal") closeReplayModal();
+  });
+  $("#openReplayExternal").addEventListener("click", () => {
+    const url = $("#openReplayExternal").dataset.url;
+    if (url) window.open(url, "_blank");
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && $("#replayModal").classList.contains("is-visible")) {
+      closeReplayModal();
+    }
+  });
 }
 
 async function init() {
