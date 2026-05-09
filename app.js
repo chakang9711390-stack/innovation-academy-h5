@@ -579,7 +579,17 @@ function renderPositionMenuItem(position, checked) {
 function setMorePositionsVisible(visible) {
   $("#morePositionChecks").hidden = !visible;
   $("#toggleMorePositions").setAttribute("aria-expanded", String(visible));
-  $("#toggleMorePositions").textContent = visible ? "收起岗位" : "更多岗位";
+  updateMorePositionButton();
+}
+
+function updateMorePositionButton() {
+  const selectedCount = $$("#morePositionChecks input:checked").length;
+  const isOpen = $("#toggleMorePositions").getAttribute("aria-expanded") === "true";
+  if (isOpen) {
+    $("#toggleMorePositions").textContent = selectedCount ? `收起岗位（已选 ${selectedCount}）` : "收起岗位";
+    return;
+  }
+  $("#toggleMorePositions").textContent = selectedCount ? `更多岗位（已选 ${selectedCount}）` : "更多岗位";
 }
 
 function renderAssetOptions() {
@@ -725,7 +735,7 @@ function fillCourseForm(course) {
   $$("#positionChecks input, #morePositionChecks input").forEach((input) => {
     input.checked = course.positions.includes(input.value);
   });
-  setMorePositionsVisible($$("#morePositionChecks input:checked").length > 0);
+  setMorePositionsVisible(false);
   $("#startAt").value = course.startAt.slice(0, 16);
   $("#endAt").value = course.endAt.slice(0, 16);
   $("#contentLines").value = course.content.join("\n");
@@ -891,6 +901,8 @@ function bindEvents() {
   $("#toggleMorePositions").addEventListener("click", () => {
     setMorePositionsVisible($("#morePositionChecks").hidden);
   });
+
+  $("#morePositionChecks").addEventListener("change", updateMorePositionButton);
 
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".position-picker")) setMorePositionsVisible(false);
