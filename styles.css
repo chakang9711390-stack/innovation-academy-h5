@@ -780,8 +780,11 @@ textarea:focus {
 }
 
 .position-picker {
-  display: grid;
+  position: relative;
+  display: flex;
+  align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .check-row {
@@ -809,10 +812,10 @@ textarea:focus {
   display: block;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 9px 14px;
+  padding: 8px 13px;
   background: #fff;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 14px;
   transition: 0.18s ease;
 }
 
@@ -828,12 +831,11 @@ textarea:focus {
 }
 
 .more-positions {
-  justify-self: start;
-  border: 0;
+  border: 1px solid #bdece4;
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 8px 13px;
   color: var(--mint-deep);
-  background: transparent;
+  background: #f4fbf9;
   font-size: 14px;
 }
 
@@ -846,11 +848,50 @@ textarea:focus {
   content: "⌃";
 }
 
-.more-position-row {
-  padding: 12px;
+.more-position-wrap {
+  position: relative;
+}
+
+.more-position-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 8;
+  width: min(360px, calc(100vw - 48px));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px;
   border: 1px solid #e6f0f3;
   border-radius: 14px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 40px rgba(52, 92, 107, 0.14);
+}
+
+.position-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 9px 10px;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.position-menu-item:hover {
   background: #f7fbfc;
+}
+
+.position-menu-item input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.position-menu-item:has(input:checked) {
+  color: var(--mint-deep);
+  background: var(--green-soft);
 }
 
 .form-hint {

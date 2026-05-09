@@ -564,12 +564,16 @@ function renderPositionChecks() {
     .map((pos, index) => renderPositionChip(pos, index < 2))
     .join("");
   $("#morePositionChecks").innerHTML = morePositions
-    .map((pos) => renderPositionChip(pos, false))
+    .map((pos) => renderPositionMenuItem(pos, false))
     .join("");
 }
 
 function renderPositionChip(position, checked) {
   return `<label class="check-chip"><input type="checkbox" value="${position}" ${checked ? "checked" : ""} /><span>${position}</span></label>`;
+}
+
+function renderPositionMenuItem(position, checked) {
+  return `<label class="position-menu-item"><input type="checkbox" value="${position}" ${checked ? "checked" : ""} /><span>${position}</span></label>`;
 }
 
 function setMorePositionsVisible(visible) {
@@ -886,6 +890,10 @@ function bindEvents() {
 
   $("#toggleMorePositions").addEventListener("click", () => {
     setMorePositionsVisible($("#morePositionChecks").hidden);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".position-picker")) setMorePositionsVisible(false);
   });
 
   $("#assetCourse").addEventListener("change", updateAssetStatus);
