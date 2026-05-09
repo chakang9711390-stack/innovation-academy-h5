@@ -866,7 +866,8 @@ textarea:focus {
   transform: translateX(-50%) translateY(0);
 }
 
-.replay-modal {
+.replay-modal,
+.confirm-modal {
   position: fixed;
   inset: 0;
   z-index: 25;
@@ -878,7 +879,8 @@ textarea:focus {
   backdrop-filter: blur(8px);
 }
 
-.replay-modal.is-visible {
+.replay-modal.is-visible,
+.confirm-modal.is-visible {
   display: flex;
 }
 
@@ -893,6 +895,35 @@ textarea:focus {
   background: #fff;
   padding: 20px;
   box-shadow: 0 28px 80px rgba(20, 41, 50, 0.2);
+}
+
+.confirm-dialog {
+  width: min(520px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #fff;
+  padding: 24px;
+  box-shadow: 0 28px 80px rgba(20, 41, 50, 0.2);
+}
+
+.confirm-dialog h3 {
+  margin: 8px 0 10px;
+  font-size: 24px;
+  font-weight: 500;
+  color: #19323d;
+}
+
+.confirm-dialog p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
 }
 
 .replay-head {
@@ -1179,7 +1210,8 @@ textarea:focus {
     flex: 1 1 128px;
   }
 
-  .replay-modal {
+  .replay-modal,
+  .confirm-modal {
     padding: 12px;
   }
 

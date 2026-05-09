@@ -164,6 +164,18 @@
       </div>
     </div>
 
+    <div class="confirm-modal" id="deleteConfirmModal" aria-hidden="true">
+      <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+        <p class="eyebrow">删除课程</p>
+        <h3 id="deleteConfirmTitle">确认删除课程？</h3>
+        <p id="deleteConfirmText">删除后学员端将不再展示该课程。</p>
+        <div class="confirm-actions">
+          <button class="secondary-button" type="button" id="cancelDeleteCourse">取消</button>
+          <button class="danger-button" type="button" id="confirmDeleteCourse">删除</button>
+        </div>
+      </div>
+    </div>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="./app.js"></script>
   </body>

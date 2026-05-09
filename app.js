@@ -87,6 +87,29 @@ const tabs = [
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const AUTH_SESSION_KEY = "innovation-academy-session";
+const POSITION_OPTIONS = [
+  "运维",
+  "后端研发",
+  "前端研发",
+  "客户端研发",
+  "算法",
+  "音视频研发",
+  "大数据",
+  "测试",
+  "测试开发",
+  "产品",
+  "项目管理",
+  "设计",
+  "数据分析",
+  "运营",
+  "内容运营",
+  "审核风控",
+  "推荐策略",
+  "增长",
+  "商业化",
+  "安全",
+  "客服",
+];
 
 const fmtDate = (date) => {
   const yyyy = date.getFullYear();
@@ -174,6 +197,22 @@ function closeReplayModal() {
   $("#replayModal").setAttribute("aria-hidden", "true");
   $("#replayFrame").innerHTML = "";
   $("#openReplayExternal").removeAttribute("data-url");
+}
+
+function openDeleteConfirm(course) {
+  $("#deleteConfirmModal").dataset.course = course.id;
+  $("#deleteConfirmTitle").textContent = "确认删除课程？";
+  $("#deleteConfirmText").textContent = `「${course.title}」删除后将从直播日历、课程广场和学习记录中移除。`;
+  $("#deleteConfirmModal").classList.add("is-visible");
+  $("#deleteConfirmModal").setAttribute("aria-hidden", "false");
+}
+
+function closeDeleteConfirm() {
+  $("#deleteConfirmModal").classList.remove("is-visible");
+  $("#deleteConfirmModal").setAttribute("aria-hidden", "true");
+  $("#deleteConfirmModal").removeAttribute("data-course");
+  $("#confirmDeleteCourse").disabled = false;
+  $("#confirmDeleteCourse").textContent = "删除";
 }
 
 function openReplayModal(course) {
@@ -519,7 +558,7 @@ function renderRecordCard(course) {
 }
 
 function renderPositionChecks() {
-  $("#positionChecks").innerHTML = ["运维", "研发", "测试", "产品"]
+  $("#positionChecks").innerHTML = POSITION_OPTIONS
     .map((pos, index) => `<label class="check-chip"><input type="checkbox" value="${pos}" ${index < 2 ? "checked" : ""} />${pos}</label>`)
     .join("");
 }
@@ -902,29 +941,48 @@ function bindEvents() {
       return;
     }
     if (button.dataset.adminAction === "delete") {
-      if (!window.confirm(`确认删除「${course.title}」吗？`)) return;
-      button.disabled = true;
-      try {
-        await apiFetch("/api/courses", { method: "DELETE", body: JSON.stringify({ courseId: course.id }) });
-        state.courses = state.courses.filter((item) => item.id !== course.id);
-        renderCalendar();
-        renderCourses();
-        renderRecords();
-        renderAssetOptions();
-        renderAdminCourseList();
-        showToast("课程已删除");
-      } catch (error) {
-        button.disabled = false;
-        showToast(error.message);
-      }
+      openDeleteConfirm(course);
     }
   });
 
   $("#cancelEdit").addEventListener("click", resetCourseForm);
 
+  $("#cancelDeleteCourse").addEventListener("click", closeDeleteConfirm);
+
+  $("#confirmDeleteCourse").addEventListener("click", async () => {
+    const courseId = $("#deleteConfirmModal").dataset.course;
+    const course = state.courses.find((item) => item.id === courseId);
+    if (!course) {
+      closeDeleteConfirm();
+      return;
+    }
+    const button = $("#confirmDeleteCourse");
+    button.disabled = true;
+    button.textContent = "删除中...";
+    try {
+      await apiFetch("/api/courses", { method: "DELETE", body: JSON.stringify({ courseId }) });
+      state.courses = state.courses.filter((item) => item.id !== courseId);
+      renderCalendar();
+      renderCourses();
+      renderRecords();
+      renderAssetOptions();
+      renderAdminCourseList();
+      closeDeleteConfirm();
+      showToast("课程已删除");
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "删除";
+      showToast(error.message);
+    }
+  });
+
   $("#closeReplay").addEventListener("click", closeReplayModal);
   $("#replayModal").addEventListener("click", (event) => {
     if (event.target.id === "replayModal") closeReplayModal();
+  });
+
+  $("#deleteConfirmModal").addEventListener("click", (event) => {
+    if (event.target.id === "deleteConfirmModal") closeDeleteConfirm();
   });
   $("#openReplayExternal").addEventListener("click", () => {
     const url = $("#openReplayExternal").dataset.url;
@@ -933,6 +991,9 @@ function bindEvents() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && $("#replayModal").classList.contains("is-visible")) {
       closeReplayModal();
+    }
+    if (event.key === "Escape" && $("#deleteConfirmModal").classList.contains("is-visible")) {
+      closeDeleteConfirm();
     }
   });
 }
