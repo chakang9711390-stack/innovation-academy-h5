@@ -247,6 +247,26 @@ function setUploadProgress(visible, percent = 0, text = "") {
   label.textContent = text || `上传进度 ${Math.round(percent)}%`;
 }
 
+function safeDownloadName(course) {
+  const fallback = `${course.title || "知识手册"}.pdf`;
+  return (course.handbookFileName || fallback).replace(/[\\/:*?"<>|]+/g, "-");
+}
+
+async function downloadHandbook(course) {
+  const response = await fetch(course.handbookUrl);
+  if (!response.ok) throw new Error("手册下载失败，请稍后重试");
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = safeDownloadName(course);
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function setCurrentUser(user, token) {
   state.currentUser = { username: user.username, role: user.role };
   state.token = token;
@@ -744,8 +764,18 @@ function bindEvents() {
     }
     if (action === "download") {
       if (course.handbookUrl && isValidHttpsUrl(course.handbookUrl)) {
-        window.open(course.handbookUrl, "_blank");
-        showToast("正在打开知识手册");
+        actionButton.disabled = true;
+        const originalText = actionButton.textContent;
+        actionButton.textContent = "下载中...";
+        try {
+          await downloadHandbook(course);
+          showToast("知识手册已开始下载");
+        } catch (error) {
+          showToast(error.message);
+        } finally {
+          actionButton.disabled = false;
+          actionButton.textContent = originalText;
+        }
       } else {
         showToast(course.handbookUrl ? "手册链接格式异常，请联系管理员" : "手册上传中");
       }
