@@ -1,5 +1,13 @@
 const { ensureSchema, getSql, json, normalizeCourse, readBody, requireAdmin } = require("./_lib");
 
+const COURSE_SELECT = `
+  id, title, subtitle, positions, start_at, end_at, content, scenarios,
+  teacher, live_url, replay_url, handbook_url, replay_file_name, handbook_file_name,
+  replay_data is not null as has_replay_file,
+  handbook_data is not null as has_handbook_file,
+  form, status, created_at, updated_at
+`;
+
 function makeId() {
   return `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
@@ -10,7 +18,7 @@ module.exports = async function handler(req, res) {
     const sql = getSql();
 
     if (req.method === "GET") {
-      const rows = await sql`select * from courses order by start_at asc`;
+      const rows = await sql.query(`select ${COURSE_SELECT} from courses order by start_at asc`);
       json(res, 200, { courses: rows.map(normalizeCourse) });
       return;
     }
@@ -33,7 +41,7 @@ module.exports = async function handler(req, res) {
           '', '', ${String(body.form || "在线实操")}, ${status}
         )
       `;
-      const rows = await sql`select * from courses where id = ${id}`;
+      const rows = await sql.query(`select ${COURSE_SELECT} from courses where id = $1`, [id]);
       json(res, 201, { course: normalizeCourse(rows[0]) });
       return;
     }
@@ -43,11 +51,33 @@ module.exports = async function handler(req, res) {
       const body = await readBody(req);
       const courseId = String(body.courseId || "");
       if (body.mode === "assets") {
+        const replayFile = body.replayFile;
+        const handbookFile = body.handbookFile;
+        if (replayFile?.data) {
+          await sql`
+            update courses
+            set replay_file_name = ${String(replayFile.name || "replay-video")},
+                replay_content_type = ${String(replayFile.type || "video/mp4")},
+                replay_data = decode(${String(replayFile.data)}, 'base64'),
+                replay_url = '',
+                updated_at = now()
+            where id = ${courseId}
+          `;
+        }
+        if (handbookFile?.data) {
+          await sql`
+            update courses
+            set handbook_file_name = ${String(handbookFile.name || "handbook.pdf")},
+                handbook_content_type = ${String(handbookFile.type || "application/pdf")},
+                handbook_data = decode(${String(handbookFile.data)}, 'base64'),
+                handbook_url = '',
+                updated_at = now()
+            where id = ${courseId}
+          `;
+        }
         await sql`
           update courses
-          set replay_url = ${String(body.replayUrl || "").trim()},
-              handbook_url = ${String(body.handbookUrl || "").trim()},
-              updated_at = now()
+          set updated_at = now()
           where id = ${courseId}
         `;
       } else {
@@ -69,7 +99,7 @@ module.exports = async function handler(req, res) {
           where id = ${courseId}
         `;
       }
-      const rows = await sql`select * from courses where id = ${courseId}`;
+      const rows = await sql.query(`select ${COURSE_SELECT} from courses where id = $1`, [courseId]);
       if (!rows[0]) {
         json(res, 404, { error: "课程不存在" });
         return;

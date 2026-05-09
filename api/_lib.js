@@ -25,7 +25,7 @@ function readBody(req) {
     let raw = "";
     req.on("data", (chunk) => {
       raw += chunk;
-      if (raw.length > 1_000_000) {
+      if (raw.length > 8_000_000) {
         reject(new Error("Request body too large"));
         req.destroy();
       }
@@ -103,6 +103,8 @@ function requireAdmin(req, res) {
 }
 
 function normalizeCourse(row) {
+  const replayUrl = row.has_replay_file ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=replay` : row.replay_url || "";
+  const handbookUrl = row.has_handbook_file ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=handbook` : row.handbook_url || "";
   return {
     id: row.id,
     title: row.title,
@@ -114,8 +116,10 @@ function normalizeCourse(row) {
     scenarios: row.scenarios || [],
     teacher: row.teacher,
     liveUrl: row.live_url || "",
-    replayUrl: row.replay_url || "",
-    handbookUrl: row.handbook_url || "",
+    replayUrl,
+    handbookUrl,
+    replayFileName: row.replay_file_name || "",
+    handbookFileName: row.handbook_file_name || "",
     form: row.form || "讲解",
     published: row.status === "published",
   };
@@ -146,12 +150,24 @@ async function ensureSchema() {
       live_url text,
       replay_url text,
       handbook_url text,
+      replay_file_name text,
+      replay_content_type text,
+      replay_data bytea,
+      handbook_file_name text,
+      handbook_content_type text,
+      handbook_data bytea,
       form text not null default '讲解',
       status text not null default 'published' check (status in ('draft', 'published')),
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
     )
   `;
+  await sql`alter table courses add column if not exists replay_file_name text`;
+  await sql`alter table courses add column if not exists replay_content_type text`;
+  await sql`alter table courses add column if not exists replay_data bytea`;
+  await sql`alter table courses add column if not exists handbook_file_name text`;
+  await sql`alter table courses add column if not exists handbook_content_type text`;
+  await sql`alter table courses add column if not exists handbook_data bytea`;
   await sql`
     create table if not exists user_records (
       id text primary key,

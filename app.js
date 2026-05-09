@@ -146,6 +146,7 @@ function showToast(message) {
 
 function isValidHttpsUrl(value) {
   if (!value) return true;
+  if (value.startsWith("/api/assets")) return true;
   try {
     return new URL(value).protocol === "https:";
   } catch {
@@ -155,7 +156,8 @@ function isValidHttpsUrl(value) {
 
 function isVideoUrl(value) {
   try {
-    const { pathname } = new URL(value);
+    const { pathname, searchParams } = new URL(value, window.location.origin);
+    if (pathname === "/api/assets" && searchParams.get("type") === "replay") return true;
     return /\.(mp4|webm|ogg|mov|m4v)$/i.test(pathname);
   } catch {
     return false;
@@ -195,6 +197,31 @@ async function apiFetch(path, options = {}) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "请求失败，请重试");
   return data;
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = String(reader.result || "");
+      resolve(value.includes(",") ? value.split(",").pop() : value);
+    };
+    reader.onerror = () => reject(new Error("文件读取失败"));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function buildUploadPayload(file) {
+  if (!file) return null;
+  const maxBytes = 3 * 1024 * 1024;
+  if (file.size > maxBytes) {
+    throw new Error("单个文件暂限 3MB，请压缩后上传");
+  }
+  return {
+    name: file.name,
+    type: file.type || "application/octet-stream",
+    data: await readFileAsBase64(file),
+  };
 }
 
 function setCurrentUser(user, token) {
@@ -480,9 +507,9 @@ function renderAdminCourseItem(course) {
 function updateAssetStatus() {
   const course = state.courses.find((item) => item.id === $("#assetCourse").value) || state.courses[0];
   if (!course) return;
-  $("#replayUrl").value = course.replayUrl || "";
-  $("#handbookUrl").value = course.handbookUrl || "";
-  $("#assetStatus").innerHTML = `当前回放：${course.replayUrl ? "已上传" : "未上传"}<br />当前手册：${course.handbookUrl ? "已绑定链接" : "未上传"}`;
+  $("#replayFile").value = "";
+  $("#handbookFile").value = "";
+  $("#assetStatus").innerHTML = `当前回放：${course.replayUrl ? course.replayFileName || "已上传视频" : "未上传"}<br />当前手册：${course.handbookUrl ? course.handbookFileName || "已上传 PDF" : "未上传"}`;
 }
 
 async function loadCourses() {
@@ -723,22 +750,29 @@ function bindEvents() {
   $("#assetFormPanel").addEventListener("submit", async (event) => {
     event.preventDefault();
     const course = state.courses.find((item) => item.id === $("#assetCourse").value);
-    const url = $("#replayUrl").value.trim();
-    const handbookUrl = $("#handbookUrl").value.trim();
-    if (url && !/^https:\/\/.+(feishu|larksuite|lark|example)\./i.test(url)) {
-      $("#replayUrl").focus();
-      showToast("请输入有效的 Lark 链接");
+    const replayFile = $("#replayFile").files[0];
+    const handbookFile = $("#handbookFile").files[0];
+    if (!replayFile && !handbookFile) {
+      showToast("请选择要上传的视频或 PDF");
       return;
     }
-    if (handbookUrl && !isValidHttpsUrl(handbookUrl)) {
-      $("#handbookUrl").focus();
-      showToast("请输入有效的 S3 或飞书文件链接");
+    if (replayFile && !replayFile.type.startsWith("video/")) {
+      showToast("回放文件需为视频格式");
+      return;
+    }
+    if (handbookFile && handbookFile.type !== "application/pdf") {
+      showToast("知识手册仅支持 PDF");
       return;
     }
     try {
+      const submitButton = $("#assetFormPanel button[type='submit']");
+      submitButton.disabled = true;
+      submitButton.textContent = "上传中...";
+      const replayPayload = await buildUploadPayload(replayFile);
+      const handbookPayload = await buildUploadPayload(handbookFile);
       const data = await apiFetch("/api/courses", {
         method: "PUT",
-        body: JSON.stringify({ mode: "assets", courseId: course.id, replayUrl: url, handbookUrl }),
+        body: JSON.stringify({ mode: "assets", courseId: course.id, replayFile: replayPayload, handbookFile: handbookPayload }),
       });
       const index = state.courses.findIndex((item) => item.id === course.id);
       state.courses[index] = data.course;
@@ -749,6 +783,10 @@ function bindEvents() {
       showToast("已更新，学员端实时生效");
     } catch (error) {
       showToast(error.message);
+    } finally {
+      const submitButton = $("#assetFormPanel button[type='submit']");
+      submitButton.disabled = false;
+      submitButton.textContent = "保存";
     }
   });
 
