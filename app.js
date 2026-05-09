@@ -98,12 +98,16 @@ const fmtDate = (date) => {
 const parseDate = (value) => new Date(value);
 
 function getCourseRuntime(course) {
-  const now = new Date("2026-04-30T20:50:00+08:00");
+  const now = new Date();
   const start = parseDate(course.startAt);
   const end = parseDate(course.endAt);
   if (now < start) return "upcoming";
   if (now >= start && now <= end) return "live";
   return "ended";
+}
+
+function canUploadCourseAssets(course) {
+  return course.published && parseDate(course.startAt) <= new Date();
 }
 
 function statusLabel(status) {
@@ -521,9 +525,12 @@ function renderPositionChecks() {
 }
 
 function renderAssetOptions() {
-  $("#assetCourse").innerHTML = state.courses
+  const uploadable = state.courses
+    .filter(canUploadCourseAssets)
+    .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
+  $("#assetCourse").innerHTML = uploadable.length ? uploadable
     .map((course) => `<option value="${course.id}">${course.title} · ${statusLabel(getCourseRuntime(course))}</option>`)
-    .join("");
+    .join("") : `<option value="">暂无可上传课程</option>`;
   updateAssetStatus();
 }
 
@@ -557,10 +564,17 @@ function renderAdminCourseItem(course) {
 }
 
 function updateAssetStatus() {
-  const course = state.courses.find((item) => item.id === $("#assetCourse").value) || state.courses[0];
-  if (!course) return;
+  const course = state.courses.find((item) => item.id === $("#assetCourse").value);
   $("#replayFile").value = "";
   $("#handbookFile").value = "";
+  const hasCourse = Boolean(course);
+  $("#replayFile").disabled = !hasCourse;
+  $("#handbookFile").disabled = !hasCourse;
+  $("#assetFormPanel button[type='submit']").disabled = !hasCourse;
+  if (!course) {
+    $("#assetStatus").innerHTML = "未开播课程不会出现在这里；课程到开课时间后可上传回放视频和知识手册。";
+    return;
+  }
   $("#assetStatus").innerHTML = `当前回放：${course.replayUrl ? course.replayFileName || "已上传视频" : "未上传"}<br />当前手册：${course.handbookUrl ? course.handbookFileName || "已上传 PDF" : "未上传"}`;
 }
 
@@ -816,6 +830,10 @@ function bindEvents() {
   $("#assetFormPanel").addEventListener("submit", async (event) => {
     event.preventDefault();
     const course = state.courses.find((item) => item.id === $("#assetCourse").value);
+    if (!course) {
+      showToast("暂无可上传课程");
+      return;
+    }
     const replayFile = $("#replayFile").files[0];
     const handbookFile = $("#handbookFile").files[0];
     if (!replayFile && !handbookFile) {
