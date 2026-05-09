@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
     if (req.method === "POST") {
       const body = await readBody(req);
       const courseId = String(body.courseId || "");
-      if (body.action === "watch") {
+      if (["watch", "remind", "download"].includes(body.action)) {
         await sql`
           insert into user_records (id, username, course_id)
           values (${makeId("r")}, ${user.username}, ${courseId})

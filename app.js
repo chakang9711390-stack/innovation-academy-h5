@@ -7,7 +7,7 @@ const state = {
   month: new Date(2026, 3, 1),
   selectedDate: "2026-04-30",
   ratings: {},
-  watched: new Set(["c1", "c2"]),
+  watched: new Set(),
   reminders: new Set(),
   courses: [
     {
@@ -344,6 +344,12 @@ async function downloadHandbook(course) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function markCourseRecorded(courseId, action) {
+  state.watched.add(courseId);
+  renderRecords();
+  apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action, courseId }) }).catch((error) => showToast(error.message));
+}
+
 function setCurrentUser(user, token) {
   state.currentUser = { username: user.username, role: user.role };
   state.token = token;
@@ -558,11 +564,14 @@ function renderCourseAction(course, status) {
   if (status === "live") {
     return `<button class="primary-button" type="button" data-action="live" data-course="${course.id}">进入直播间</button>`;
   }
-  return `<button class="primary-button" type="button" data-action="replay" data-course="${course.id}">观看回放</button>`;
+  return `
+    <button class="primary-button" type="button" data-action="replay" data-course="${course.id}">观看回放</button>
+    <button class="secondary-button" type="button" data-action="download" data-course="${course.id}" ${course.handbookUrl ? "" : 'disabled title="手册上传中"'}>下载知识手册</button>
+  `;
 }
 
 function renderRecords() {
-  const records = state.courses.filter((course) => state.watched.has(course.id) || getCourseRuntime(course) === "ended");
+  const records = state.courses.filter((course) => state.watched.has(course.id));
   const totalMs = records.reduce((sum, course) => sum + (parseDate(course.endAt) - parseDate(course.startAt)), 0);
   $("#learnedCount").textContent = records.length;
   $("#learnedHours").textContent = `${Math.round(totalMs / 36e5)}h`;
@@ -879,16 +888,15 @@ function bindEvents() {
     if (action === "remind") showToast("已写入日历提醒");
     if (action === "signup") {
       state.reminders.add(course.id);
+      markCourseRecorded(course.id, "remind");
       renderCourses();
       showToast("已加入开播提醒");
     }
     if (action === "live") window.open(course.liveUrl, "_blank");
     if (action === "replay" || action === "recordReplay") {
-      state.watched.add(course.id);
       showToast("正在打开回放");
-      apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action: "watch", courseId: course.id }) }).catch((error) => showToast(error.message));
+      markCourseRecorded(course.id, "watch");
       if (course.replayUrl) openReplayModal(course);
-      renderRecords();
     }
     if (action === "download") {
       if (course.handbookUrl && isValidHttpsUrl(course.handbookUrl)) {
@@ -897,6 +905,7 @@ function bindEvents() {
         actionButton.textContent = "下载中...";
         try {
           await downloadHandbook(course);
+          markCourseRecorded(course.id, "download");
           showToast("知识手册已开始下载");
         } catch (error) {
           showToast(error.message);
