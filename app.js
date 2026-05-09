@@ -8,6 +8,7 @@ const state = {
   selectedDate: "2026-04-30",
   ratings: {},
   watched: new Set(["c1", "c2"]),
+  reminders: new Set(),
   courses: [
     {
       id: "c1",
@@ -199,7 +200,28 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
-async function uploadAssetFile(course, type, file) {
+function uploadFileWithProgress(url, file, contentType, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("content-type", contentType);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded);
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress(file.size);
+        resolve();
+        return;
+      }
+      reject(new Error("上传对象存储失败，请检查存储桶 CORS 或稍后重试"));
+    };
+    xhr.onerror = () => reject(new Error("网络上传失败，请稍后重试"));
+    xhr.send(file);
+  });
+}
+
+async function uploadAssetFile(course, type, file, onProgress = () => {}) {
   if (!file) return null;
   const contentType = file.type || "application/octet-stream";
   const data = await apiFetch("/api/upload-url", {
@@ -212,15 +234,17 @@ async function uploadAssetFile(course, type, file) {
       size: file.size,
     }),
   });
-  const response = await fetch(data.uploadUrl, {
-    method: "PUT",
-    headers: { "content-type": contentType },
-    body: file,
-  });
-  if (!response.ok) {
-    throw new Error("上传对象存储失败，请检查存储桶 CORS 或稍后重试");
-  }
+  await uploadFileWithProgress(data.uploadUrl, file, contentType, onProgress);
   return data.asset;
+}
+
+function setUploadProgress(visible, percent = 0, text = "") {
+  const wrap = $("#uploadProgress");
+  const bar = $("#uploadProgressBar");
+  const label = $("#uploadProgressText");
+  wrap.classList.toggle("is-visible", visible);
+  bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+  label.textContent = text || `上传进度 ${Math.round(percent)}%`;
 }
 
 function setCurrentUser(user, token) {
@@ -393,8 +417,7 @@ function renderCourses() {
 function renderCourseCard(course) {
   const status = getCourseRuntime(course);
   const initial = course.teacher.split("-").pop().slice(0, 1).toUpperCase();
-  const primaryAction = status === "live" ? "进入直播间" : status === "upcoming" ? "提醒我" : "观看回放";
-  const disabled = status === "ended" && !course.replayUrl;
+  const actionHtml = renderCourseAction(course, status);
 
   return `
     <article class="course-card ${status === "ended" ? "is-past" : ""}" id="course-${course.id}">
@@ -424,11 +447,21 @@ function renderCourseCard(course) {
         <span class="meta">授课老师 · ${course.teacher}</span>
       </div>
       <div class="record-actions">
-        <button class="secondary-button" type="button" data-action="remind" data-course="${course.id}" ${status !== "upcoming" ? "disabled" : ""}>提醒我</button>
-        <button class="primary-button" type="button" data-action="${status === "live" ? "live" : status === "ended" ? "replay" : "signup"}" data-course="${course.id}" ${disabled ? "disabled" : ""}>${primaryAction}</button>
+        ${actionHtml}
       </div>
     </article>
   `;
+}
+
+function renderCourseAction(course, status) {
+  if (status === "upcoming") {
+    const reminded = state.reminders.has(course.id);
+    return `<button class="secondary-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已加入开播提醒" : "提醒我"}</button>`;
+  }
+  if (status === "live") {
+    return `<button class="primary-button" type="button" data-action="live" data-course="${course.id}">进入直播间</button>`;
+  }
+  return `<button class="primary-button" type="button" data-action="replay" data-course="${course.id}">观看回放</button>`;
 }
 
 function renderRecords() {
@@ -696,7 +729,11 @@ function bindEvents() {
     const course = state.courses.find((item) => item.id === actionButton.dataset.course);
     const action = actionButton.dataset.action;
     if (action === "remind") showToast("已写入日历提醒");
-    if (action === "signup") showToast("报名成功，开播前将提醒你");
+    if (action === "signup") {
+      state.reminders.add(course.id);
+      renderCourses();
+      showToast("已加入开播提醒");
+    }
     if (action === "live") window.open(course.liveUrl, "_blank");
     if (action === "replay" || action === "recordReplay") {
       state.watched.add(course.id);
@@ -767,8 +804,19 @@ function bindEvents() {
       const submitButton = $("#assetFormPanel button[type='submit']");
       submitButton.disabled = true;
       submitButton.textContent = "上传中...";
-      const replayAsset = await uploadAssetFile(course, "replay", replayFile);
-      const handbookAsset = await uploadAssetFile(course, "handbook", handbookFile);
+      const files = [replayFile, handbookFile].filter(Boolean);
+      const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+      const loadedByType = { replay: 0, handbook: 0 };
+      const updateProgress = (type, loaded) => {
+        loadedByType[type] = loaded;
+        const loadedBytes = loadedByType.replay + loadedByType.handbook;
+        const percent = totalBytes ? (loadedBytes / totalBytes) * 100 : 0;
+        setUploadProgress(true, percent, `上传进度 ${Math.round(percent)}%`);
+      };
+      setUploadProgress(true, 0, "准备上传...");
+      const replayAsset = await uploadAssetFile(course, "replay", replayFile, (loaded) => updateProgress("replay", loaded));
+      const handbookAsset = await uploadAssetFile(course, "handbook", handbookFile, (loaded) => updateProgress("handbook", loaded));
+      setUploadProgress(true, 100, "上传完成，正在保存...");
       const data = await apiFetch("/api/courses", {
         method: "PUT",
         body: JSON.stringify({ mode: "assets", courseId: course.id, replayAsset, handbookAsset }),
@@ -780,7 +828,9 @@ function bindEvents() {
       renderRecords();
       renderAdminCourseList();
       showToast("已更新，学员端实时生效");
+      window.setTimeout(() => setUploadProgress(false), 900);
     } catch (error) {
+      setUploadProgress(true, 0, "上传失败");
       showToast(error.message);
     } finally {
       const submitButton = $("#assetFormPanel button[type='submit']");

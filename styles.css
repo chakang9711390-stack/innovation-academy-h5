@@ -588,6 +588,12 @@ h1 {
   box-shadow: none;
 }
 
+.secondary-button.is-reminded {
+  color: var(--mint-deep);
+  background: var(--mint-soft);
+  border-color: #bdece4;
+}
+
 .danger-button {
   color: var(--red);
   background: var(--red-soft);
@@ -802,6 +808,38 @@ textarea:focus {
   border-radius: 14px;
   padding: 12px;
   line-height: 1.6;
+}
+
+.upload-progress {
+  display: none;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.upload-progress.is-visible {
+  display: grid;
+}
+
+.upload-progress-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.upload-progress-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eaf4f5;
+}
+
+.upload-progress-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #55c8b6, #2aa99b);
+  transition: width 0.18s ease;
 }
 
 .toast {

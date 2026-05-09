@@ -127,6 +127,12 @@
           <label>回放视频文件<input id="replayFile" type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*" /></label>
           <label>知识手册 PDF<input id="handbookFile" type="file" accept="application/pdf" /></label>
           <p class="form-hint">文件将直传对象存储，数据库仅保存文件地址与元信息。</p>
+          <div class="upload-progress" id="uploadProgress" aria-live="polite">
+            <div class="upload-progress-head">
+              <span id="uploadProgressText">上传进度 0%</span>
+            </div>
+            <div class="upload-progress-track"><span id="uploadProgressBar"></span></div>
+          </div>
           <div class="asset-status" id="assetStatus"></div>
           <button class="primary-button full" type="submit">保存</button>
         </form>
