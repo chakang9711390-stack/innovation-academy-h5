@@ -144,6 +144,15 @@ function showToast(message) {
   showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 2200);
 }
 
+function isValidHttpsUrl(value) {
+  if (!value) return true;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 async function apiFetch(path, options = {}) {
   const headers = { "content-type": "application/json", ...(options.headers || {}) };
   if (state.token) headers.authorization = `Bearer ${state.token}`;
@@ -408,7 +417,8 @@ function updateAssetStatus() {
   const course = state.courses.find((item) => item.id === $("#assetCourse").value) || state.courses[0];
   if (!course) return;
   $("#replayUrl").value = course.replayUrl || "";
-  $("#assetStatus").innerHTML = `当前回放：${course.replayUrl ? "已上传" : "未上传"}<br />当前手册：${course.handbookUrl || "未上传"}`;
+  $("#handbookUrl").value = course.handbookUrl || "";
+  $("#assetStatus").innerHTML = `当前回放：${course.replayUrl ? "已上传" : "未上传"}<br />当前手册：${course.handbookUrl ? "已绑定链接" : "未上传"}`;
 }
 
 async function loadCourses() {
@@ -544,7 +554,14 @@ function bindEvents() {
       if (course.replayUrl) window.open(course.replayUrl, "_blank");
       renderRecords();
     }
-    if (action === "download") showToast(course.handbookUrl ? `开始下载 ${course.handbookUrl}` : "手册上传中");
+    if (action === "download") {
+      if (course.handbookUrl && isValidHttpsUrl(course.handbookUrl)) {
+        window.open(course.handbookUrl, "_blank");
+        showToast("正在打开知识手册");
+      } else {
+        showToast(course.handbookUrl ? "手册链接格式异常，请联系管理员" : "手册上传中");
+      }
+    }
   });
 
   $("#recordList").addEventListener("click", (event) => {
@@ -582,20 +599,21 @@ function bindEvents() {
     event.preventDefault();
     const course = state.courses.find((item) => item.id === $("#assetCourse").value);
     const url = $("#replayUrl").value.trim();
-    const file = $("#handbookFile").files[0];
+    const handbookUrl = $("#handbookUrl").value.trim();
     if (url && !/^https:\/\/.+(feishu|larksuite|lark|example)\./i.test(url)) {
       $("#replayUrl").focus();
       showToast("请输入有效的 Lark 链接");
       return;
     }
-    if (file && (file.type !== "application/pdf" || file.size > 50 * 1024 * 1024)) {
-      showToast("文件大小超限，请压缩后重新上传");
+    if (handbookUrl && !isValidHttpsUrl(handbookUrl)) {
+      $("#handbookUrl").focus();
+      showToast("请输入有效的 S3 或飞书文件链接");
       return;
     }
     try {
       const data = await apiFetch("/api/courses", {
         method: "PUT",
-        body: JSON.stringify({ courseId: course.id, replayUrl: url, handbookUrl: file ? file.name : course.handbookUrl }),
+        body: JSON.stringify({ courseId: course.id, replayUrl: url, handbookUrl }),
       });
       const index = state.courses.findIndex((item) => item.id === course.id);
       state.courses[index] = data.course;
