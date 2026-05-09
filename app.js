@@ -573,7 +573,7 @@ function renderPositionChip(position, checked) {
 }
 
 function renderPositionMenuItem(position, checked) {
-  return `<label class="position-menu-item"><input type="checkbox" value="${position}" ${checked ? "checked" : ""} /><span>${position}</span></label>`;
+  return `<label class="position-menu-item ${checked ? "is-selected" : ""}"><input type="checkbox" value="${position}" ${checked ? "checked" : ""} /><span>${position}</span></label>`;
 }
 
 function setMorePositionsVisible(visible) {
@@ -583,6 +583,7 @@ function setMorePositionsVisible(visible) {
 }
 
 function updateMorePositionButton() {
+  syncMorePositionItems();
   const selectedCount = $$("#morePositionChecks input:checked").length;
   const isOpen = $("#toggleMorePositions").getAttribute("aria-expanded") === "true";
   if (isOpen) {
@@ -590,6 +591,12 @@ function updateMorePositionButton() {
     return;
   }
   $("#toggleMorePositions").textContent = selectedCount ? `更多岗位（已选 ${selectedCount}）` : "更多岗位";
+}
+
+function syncMorePositionItems() {
+  $$("#morePositionChecks .position-menu-item").forEach((item) => {
+    item.classList.toggle("is-selected", item.querySelector("input").checked);
+  });
 }
 
 function renderAssetOptions() {
