@@ -192,11 +192,12 @@ function isVideoUrl(value) {
   }
 }
 
-function closeReplayModal() {
-  $("#replayModal").classList.remove("is-visible");
-  $("#replayModal").setAttribute("aria-hidden", "true");
-  $("#replayFrame").innerHTML = "";
-  $("#openReplayExternal").removeAttribute("data-url");
+function closeFullscreenPlayer() {
+  const player = $(".fullscreen-player");
+  if (!player) return;
+  const video = player.querySelector("video");
+  video?.pause();
+  player.remove();
 }
 
 function openDeleteConfirm(course) {
@@ -220,13 +221,46 @@ function openReplayModal(course) {
     showToast("回放链接格式异常，请联系管理员");
     return;
   }
-  $("#replayTitle").textContent = course.title;
-  $("#openReplayExternal").dataset.url = course.replayUrl;
-  $("#replayFrame").innerHTML = isVideoUrl(course.replayUrl)
-    ? `<video class="replay-video" src="${course.replayUrl}" controls autoplay playsinline></video>`
-    : `<iframe class="replay-iframe" src="${course.replayUrl}" title="${course.title}" allow="fullscreen; autoplay; clipboard-read; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
-  $("#replayModal").classList.add("is-visible");
-  $("#replayModal").setAttribute("aria-hidden", "false");
+  if (!isVideoUrl(course.replayUrl)) {
+    window.open(course.replayUrl, "_blank");
+    showToast("第三方回放已在新窗口打开");
+    return;
+  }
+
+  closeFullscreenPlayer();
+  const player = document.createElement("div");
+  player.className = "fullscreen-player";
+  player.innerHTML = `
+    <video class="fullscreen-video" src="${course.replayUrl}" controls autoplay playsinline></video>
+    <button class="fullscreen-close" type="button" aria-label="关闭回放">×</button>
+  `;
+  document.body.appendChild(player);
+
+  const video = player.querySelector("video");
+  const closeButton = player.querySelector("button");
+  closeButton.addEventListener("click", () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    closeFullscreenPlayer();
+  });
+  video.addEventListener("ended", () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  });
+  video.addEventListener("webkitendfullscreen", closeFullscreenPlayer);
+  const handleFullscreenChange = () => {
+    if (!document.fullscreenElement) closeFullscreenPlayer();
+  };
+  document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+  video.play().catch(() => {
+    video.muted = true;
+    video.play().catch(() => {});
+  });
+  if (video.webkitEnterFullscreen) {
+    video.webkitEnterFullscreen();
+    return;
+  }
+  const fullscreenTarget = video.requestFullscreen ? video : player;
+  fullscreenTarget.requestFullscreen?.().catch(() => {});
 }
 
 async function apiFetch(path, options = {}) {
@@ -1027,22 +1061,11 @@ function bindEvents() {
     }
   });
 
-  $("#closeReplay").addEventListener("click", closeReplayModal);
-  $("#replayModal").addEventListener("click", (event) => {
-    if (event.target.id === "replayModal") closeReplayModal();
-  });
-
   $("#deleteConfirmModal").addEventListener("click", (event) => {
     if (event.target.id === "deleteConfirmModal") closeDeleteConfirm();
   });
-  $("#openReplayExternal").addEventListener("click", () => {
-    const url = $("#openReplayExternal").dataset.url;
-    if (url) window.open(url, "_blank");
-  });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && $("#replayModal").classList.contains("is-visible")) {
-      closeReplayModal();
-    }
+    if (event.key === "Escape") closeFullscreenPlayer();
     if (event.key === "Escape" && $("#deleteConfirmModal").classList.contains("is-visible")) {
       closeDeleteConfirm();
     }
