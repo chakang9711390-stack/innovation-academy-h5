@@ -156,7 +156,12 @@ function isValidHttpsUrl(value) {
 async function apiFetch(path, options = {}) {
   const headers = { "content-type": "application/json", ...(options.headers || {}) };
   if (state.token) headers.authorization = `Bearer ${state.token}`;
-  const response = await fetch(path, { ...options, headers });
+  let response;
+  try {
+    response = await fetch(path, { ...options, headers });
+  } catch {
+    throw new Error("网络请求失败，请刷新后重试");
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "请求失败，请重试");
   return data;
@@ -231,8 +236,8 @@ async function handleAuthSubmit() {
       body: JSON.stringify({ mode: state.authMode, username, password, confirmPassword }),
     });
     setCurrentUser(data.user, data.token);
-    await loadAppData();
     showToast(state.authMode === "register" ? "注册成功，已登录" : data.user.role === "admin" ? "管理员登录成功" : "登录成功");
+    loadAppData();
   } catch (error) {
     showToast(error.message);
   }
