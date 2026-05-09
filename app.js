@@ -418,6 +418,35 @@ function renderAssetOptions() {
   updateAssetStatus();
 }
 
+function renderAdminCourseList() {
+  const published = state.courses
+    .filter((course) => course.published)
+    .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
+  $("#publishedManageCount").textContent = `${published.length} 门`;
+  $("#adminCourseList").innerHTML = published.length
+    ? published.map(renderAdminCourseItem).join("")
+    : `<div class="empty-state">暂无已发布课程</div>`;
+}
+
+function renderAdminCourseItem(course) {
+  return `
+    <article class="admin-course-card">
+      <div>
+        <h4>${course.title}</h4>
+        <p class="meta">${formatFullTime(course)} · ${course.teacher}</p>
+        <div class="tag-row">
+          ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
+          <span class="status ${getCourseRuntime(course)}">${statusLabel(getCourseRuntime(course))}</span>
+        </div>
+      </div>
+      <div class="admin-actions">
+        <button class="secondary-button" type="button" data-admin-action="edit" data-course="${course.id}">编辑</button>
+        <button class="danger-button" type="button" data-admin-action="delete" data-course="${course.id}">删除</button>
+      </div>
+    </article>
+  `;
+}
+
 function updateAssetStatus() {
   const course = state.courses.find((item) => item.id === $("#assetCourse").value) || state.courses[0];
   if (!course) return;
@@ -446,25 +475,26 @@ async function loadAppData() {
     renderCourses();
     renderRecords();
     renderAssetOptions();
+    renderAdminCourseList();
   } catch (error) {
     showToast(error.message || "加载失败，请重试");
   }
 }
 
-async function addCourse(published) {
+function getCoursePayload(published) {
   const startAt = $("#startAt").value;
   const endAt = $("#endAt").value;
   if (new Date(endAt) <= new Date(startAt)) {
     showToast("结束时间需晚于开课时间");
-    return;
+    return null;
   }
   const positions = $$("#positionChecks input:checked").map((input) => input.value);
   if (!positions.length) {
     showToast("请选择至少一个适用岗位");
-    return;
+    return null;
   }
   const lines = (id) => $(id).value.split("\n").map((line) => line.trim()).filter(Boolean);
-  const payload = {
+  return {
     title: $("#courseTitle").value.trim(),
     subtitle: $("#courseSubtitle").value.trim(),
     positions,
@@ -477,15 +507,75 @@ async function addCourse(published) {
     form: "在线实操",
     published,
   };
+}
+
+function setCourseFormSubmitting(isSubmitting) {
+  $("#publishButton").disabled = isSubmitting;
+  $("#saveDraft").disabled = isSubmitting;
+  $("#publishButton").textContent = isSubmitting ? "发布中..." : $("#editingCourseId").value ? "保存修改" : "发布";
+}
+
+function resetCourseForm() {
+  $("#courseFormPanel").reset();
+  $("#editingCourseId").value = "";
+  $("#courseTitle").value = "";
+  $("#courseSubtitle").value = "";
+  $$("#positionChecks input").forEach((input, index) => {
+    input.checked = index < 2;
+  });
+  $("#startAt").value = "2026-05-18T20:00";
+  $("#endAt").value = "2026-05-18T21:30";
+  $("#contentLines").value = "";
+  $("#scenarioLines").value = "";
+  $("#teacherName").value = "";
+  $("#liveUrl").value = "";
+  $("#publishButton").textContent = "发布";
+  $("#cancelEdit").classList.remove("is-visible");
+}
+
+function fillCourseForm(course) {
+  $("#editingCourseId").value = course.id;
+  $("#courseTitle").value = course.title;
+  $("#courseSubtitle").value = course.subtitle;
+  $$("#positionChecks input").forEach((input) => {
+    input.checked = course.positions.includes(input.value);
+  });
+  $("#startAt").value = course.startAt.slice(0, 16);
+  $("#endAt").value = course.endAt.slice(0, 16);
+  $("#contentLines").value = course.content.join("\n");
+  $("#scenarioLines").value = course.scenarios.join("\n");
+  $("#teacherName").value = course.teacher;
+  $("#liveUrl").value = course.liveUrl || "";
+  $("#publishButton").textContent = "保存修改";
+  $("#cancelEdit").classList.add("is-visible");
+}
+
+async function addCourse(published) {
+  const payload = getCoursePayload(published);
+  if (!payload) return;
+  const editingCourseId = $("#editingCourseId").value;
+  setCourseFormSubmitting(true);
   try {
-    const data = await apiFetch("/api/courses", { method: "POST", body: JSON.stringify(payload) });
-    state.courses.push(data.course);
+    const data = await apiFetch("/api/courses", {
+      method: editingCourseId ? "PUT" : "POST",
+      body: JSON.stringify(editingCourseId ? { ...payload, courseId: editingCourseId } : payload),
+    });
+    if (editingCourseId) {
+      const index = state.courses.findIndex((item) => item.id === editingCourseId);
+      state.courses[index] = data.course;
+    } else {
+      state.courses.push(data.course);
+    }
     renderCalendar();
     renderCourses();
     renderAssetOptions();
-    showToast(published ? "已发布，学员端实时可见" : "草稿已保存");
+    renderAdminCourseList();
+    resetCourseForm();
+    showToast(editingCourseId ? "课程已更新" : published ? "已发布，学员端实时可见" : "草稿已保存");
   } catch (error) {
     showToast(error.message);
+  } finally {
+    setCourseFormSubmitting(false);
   }
 }
 
@@ -618,18 +708,54 @@ function bindEvents() {
     try {
       const data = await apiFetch("/api/courses", {
         method: "PUT",
-        body: JSON.stringify({ courseId: course.id, replayUrl: url, handbookUrl }),
+        body: JSON.stringify({ mode: "assets", courseId: course.id, replayUrl: url, handbookUrl }),
       });
       const index = state.courses.findIndex((item) => item.id === course.id);
       state.courses[index] = data.course;
       updateAssetStatus();
       renderCourses();
       renderRecords();
+      renderAdminCourseList();
       showToast("已更新，学员端实时生效");
     } catch (error) {
       showToast(error.message);
     }
   });
+
+  $("#adminCourseList").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-admin-action]");
+    if (!button) return;
+    const course = state.courses.find((item) => item.id === button.dataset.course);
+    if (!course) return;
+    if (button.dataset.adminAction === "edit") {
+      fillCourseForm(course);
+      $$("#manageView .subtab, .manage-panel").forEach((item) => item.classList.remove("is-active"));
+      $('[data-panel="courseFormPanel"]').classList.add("is-active");
+      $("#courseFormPanel").classList.add("is-active");
+      $("#courseFormPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+      showToast("已载入课程，可直接修改");
+      return;
+    }
+    if (button.dataset.adminAction === "delete") {
+      if (!window.confirm(`确认删除「${course.title}」吗？`)) return;
+      button.disabled = true;
+      try {
+        await apiFetch("/api/courses", { method: "DELETE", body: JSON.stringify({ courseId: course.id }) });
+        state.courses = state.courses.filter((item) => item.id !== course.id);
+        renderCalendar();
+        renderCourses();
+        renderRecords();
+        renderAssetOptions();
+        renderAdminCourseList();
+        showToast("课程已删除");
+      } catch (error) {
+        button.disabled = false;
+        showToast(error.message);
+      }
+    }
+  });
+
+  $("#cancelEdit").addEventListener("click", resetCourseForm);
 }
 
 async function init() {
@@ -640,6 +766,7 @@ async function init() {
   renderRecords();
   renderPositionChecks();
   renderAssetOptions();
+  renderAdminCourseList();
   renderAuthMode();
   renderAuthState();
   bindEvents();

@@ -41,19 +41,49 @@ module.exports = async function handler(req, res) {
     if (req.method === "PUT") {
       if (!requireAdmin(req, res)) return;
       const body = await readBody(req);
-      await sql`
-        update courses
-        set replay_url = ${String(body.replayUrl || "").trim()},
-            handbook_url = ${String(body.handbookUrl || "").trim()},
-            updated_at = now()
-        where id = ${String(body.courseId || "")}
-      `;
-      const rows = await sql`select * from courses where id = ${String(body.courseId || "")}`;
+      const courseId = String(body.courseId || "");
+      if (body.mode === "assets") {
+        await sql`
+          update courses
+          set replay_url = ${String(body.replayUrl || "").trim()},
+              handbook_url = ${String(body.handbookUrl || "").trim()},
+              updated_at = now()
+          where id = ${courseId}
+        `;
+      } else {
+        const status = body.published ? "published" : "draft";
+        await sql`
+          update courses
+          set title = ${String(body.title || "").trim()},
+              subtitle = ${String(body.subtitle || "").trim()},
+              positions = ${JSON.stringify(body.positions || [])}::jsonb,
+              start_at = ${body.startAt},
+              end_at = ${body.endAt},
+              content = ${JSON.stringify(body.content || [])}::jsonb,
+              scenarios = ${JSON.stringify(body.scenarios || [])}::jsonb,
+              teacher = ${String(body.teacher || "").trim()},
+              live_url = ${String(body.liveUrl || "").trim()},
+              form = ${String(body.form || "在线实操")},
+              status = ${status},
+              updated_at = now()
+          where id = ${courseId}
+        `;
+      }
+      const rows = await sql`select * from courses where id = ${courseId}`;
       if (!rows[0]) {
         json(res, 404, { error: "课程不存在" });
         return;
       }
       json(res, 200, { course: normalizeCourse(rows[0]) });
+      return;
+    }
+
+    if (req.method === "DELETE") {
+      if (!requireAdmin(req, res)) return;
+      const body = await readBody(req);
+      const courseId = String(body.courseId || "");
+      await sql`delete from courses where id = ${courseId}`;
+      json(res, 200, { ok: true });
       return;
     }
 

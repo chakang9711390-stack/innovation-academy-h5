@@ -570,7 +570,8 @@ h1 {
 }
 
 .primary-button,
-.secondary-button {
+.secondary-button,
+.danger-button {
   border: 0;
   border-radius: 999px;
   padding: 12px 18px;
@@ -587,8 +588,16 @@ h1 {
   box-shadow: none;
 }
 
+.danger-button {
+  color: var(--red);
+  background: var(--red-soft);
+  border: 1px solid #ffd4d1;
+  box-shadow: none;
+}
+
 .primary-button:disabled,
-.secondary-button:disabled {
+.secondary-button:disabled,
+.danger-button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
@@ -656,7 +665,7 @@ h1 {
 
 .subtabs {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 16px;
 }
@@ -684,6 +693,48 @@ h1 {
 .manage-panel.is-active {
   display: grid;
   gap: 14px;
+}
+
+#cancelEdit {
+  display: none;
+}
+
+#cancelEdit.is-visible {
+  display: inline-flex;
+}
+
+.section-title.compact {
+  padding: 0;
+}
+
+.admin-course-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-course-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.admin-course-card h4 {
+  margin: 0;
+  color: #19323d;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 label,
@@ -985,6 +1036,18 @@ textarea:focus {
   .content-grid,
   .two-col {
     grid-template-columns: 1fr;
+  }
+
+  .subtabs {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-course-card {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-actions {
+    justify-content: flex-start;
   }
 
   .stats-grid {

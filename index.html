@@ -92,9 +92,11 @@
         <div class="subtabs" role="tablist" aria-label="管理">
           <button class="subtab is-active" type="button" data-panel="courseFormPanel">上传课程</button>
           <button class="subtab" type="button" data-panel="assetFormPanel">上传视频 & 手册</button>
+          <button class="subtab" type="button" data-panel="publishManagePanel">发布管理</button>
         </div>
 
         <form class="manage-panel is-active" id="courseFormPanel">
+          <input id="editingCourseId" type="hidden" />
           <label>课程标题<input id="courseTitle" maxlength="60" required value="Kubernetes 日志定位与告警实战" /></label>
           <label>课程形式<input id="courseSubtitle" maxlength="40" required value="带领大家完成告警链路排查" /></label>
           <div class="field-group">
@@ -115,7 +117,8 @@
           <label>直播间链接<input id="liveUrl" type="url" placeholder="https://..." value="https://example.com/live/k8s-log" /></label>
           <div class="form-actions">
             <button class="secondary-button" type="button" id="saveDraft">保存草稿</button>
-            <button class="primary-button" type="submit">发布</button>
+            <button class="secondary-button" type="button" id="cancelEdit">取消编辑</button>
+            <button class="primary-button" type="submit" id="publishButton">发布</button>
           </div>
         </form>
 
@@ -126,6 +129,14 @@
           <div class="asset-status" id="assetStatus"></div>
           <button class="primary-button full" type="submit">保存</button>
         </form>
+
+        <section class="manage-panel" id="publishManagePanel">
+          <div class="section-title compact">
+            <h3>已发布课程</h3>
+            <span id="publishedManageCount"></span>
+          </div>
+          <div class="admin-course-list" id="adminCourseList"></div>
+        </section>
       </section>
     </main>
 
