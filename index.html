@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>创新学院 H5 直播课堂</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <p class="eyebrow">H5 直播课堂</p>
+          <h1>创新学院</h1>
+          <span class="pill">账号密码登录</span>
+        </div>
+        <div class="subtabs auth-tabs" role="tablist" aria-label="账号">
+          <button class="subtab is-active" type="button" data-auth-mode="login">登录</button>
+          <button class="subtab" type="button" data-auth-mode="register">注册</button>
+        </div>
+        <form class="auth-form" id="authForm">
+          <label>账号<input id="authUsername" autocomplete="username" required placeholder="请输入账号" /></label>
+          <label>密码<input id="authPassword" type="password" autocomplete="current-password" required placeholder="请输入密码" /></label>
+          <label class="auth-register-field">确认密码<input id="authConfirmPassword" type="password" autocomplete="new-password" placeholder="请再次输入密码" /></label>
+          <button class="primary-button full" type="submit" id="authSubmit">登录</button>
+        </form>
+        <p class="auth-tip" id="authTip">管理员初始账号：kete2026，密码：999999</p>
+      </div>
+    </section>
+
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">21:00</p>
+          <h1>创新学院</h1>
+        </div>
+        <div class="header-actions">
+          <span class="user-badge" id="userBadge">未登录</span>
+          <button class="role-switch" id="logoutButton" type="button">退出</button>
+          <span class="pill">学院直播</span>
+        </div>
+      </header>
+
+      <nav class="tabs" id="mainTabs" aria-label="主导航"></nav>
+
+      <section class="view is-active" id="calendarView" aria-labelledby="tab-calendar">
+        <div class="calendar-panel">
+          <div class="monthbar">
+            <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
+            <h2 id="monthTitle">2026年4月</h2>
+            <button class="icon-button" id="nextMonth" type="button" aria-label="下个月">›</button>
+          </div>
+          <div class="weekday-row">
+            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+        <div class="section-title">
+          <h3 id="calendarListTitle">本月直播安排</h3>
+          <button class="ghost-button" id="clearDay" type="button">查看全月</button>
+        </div>
+        <div class="event-list" id="eventList"></div>
+      </section>
+
+      <section class="view" id="squareView" aria-labelledby="tab-square">
+        <div class="section-title">
+          <h3>本期课程</h3>
+          <span id="upcomingCount"></span>
+        </div>
+        <div class="course-list" id="upcomingCourses"></div>
+        <div class="section-title past-title">
+          <h3>往期回顾</h3>
+        </div>
+        <div class="course-list" id="pastCourses"></div>
+      </section>
+
+      <section class="view" id="recordsView" aria-labelledby="tab-records">
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span>已学课程数</span>
+            <strong id="learnedCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>累计时长</span>
+            <strong id="learnedHours">0h</strong>
+          </article>
+        </div>
+        <div class="record-list" id="recordList"></div>
+      </section>
+
+      <section class="view" id="manageView" aria-labelledby="tab-manage">
+        <div class="subtabs" role="tablist" aria-label="管理">
+          <button class="subtab is-active" type="button" data-panel="courseFormPanel">上传课程</button>
+          <button class="subtab" type="button" data-panel="assetFormPanel">上传视频 & 手册</button>
+        </div>
+
+        <form class="manage-panel is-active" id="courseFormPanel">
+          <label>课程标题<input id="courseTitle" maxlength="60" required value="Kubernetes 日志定位与告警实战" /></label>
+          <label>课程形式<input id="courseSubtitle" maxlength="40" required value="带领大家完成告警链路排查" /></label>
+          <div class="field-group">
+            <span>适用岗位</span>
+            <div class="check-row" id="positionChecks"></div>
+          </div>
+          <div class="two-col">
+            <label>开课时间<input id="startAt" type="datetime-local" required value="2026-05-18T20:00" /></label>
+            <label>结束时间<input id="endAt" type="datetime-local" required value="2026-05-18T21:30" /></label>
+          </div>
+          <label>课程内容<textarea id="contentLines" rows="4">告警指标定位与日志链路串联
+通过实操建立排障 SOP
+常见误报与降噪策略</textarea></label>
+          <label>适用场景<textarea id="scenarioLines" rows="4">告警频繁但定位慢
+多团队协作排障
+线上变更后快速回滚判断</textarea></label>
+          <label>授课老师<input id="teacherName" required value="创新学院-Rae" /></label>
+          <label>直播间链接<input id="liveUrl" type="url" placeholder="https://..." value="https://example.com/live/k8s-log" /></label>
+          <div class="form-actions">
+            <button class="secondary-button" type="button" id="saveDraft">保存草稿</button>
+            <button class="primary-button" type="submit">发布</button>
+          </div>
+        </form>
+
+        <form class="manage-panel" id="assetFormPanel">
+          <label>选择课程<select id="assetCourse"></select></label>
+          <label>Lark 回放链接<input id="replayUrl" type="url" placeholder="https://example.feishu.cn/minutes/..." /></label>
+          <label>知识手册 PDF<input id="handbookFile" type="file" accept="application/pdf" /></label>
+          <div class="asset-status" id="assetStatus"></div>
+          <button class="primary-button full" type="submit">保存</button>
+        </form>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
