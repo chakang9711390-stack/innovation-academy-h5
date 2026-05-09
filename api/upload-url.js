@@ -1,4 +1,4 @@
-const { ensureSchema, json, readBody, requireAdmin } = require("./_lib");
+const { ensureSchema, getSql, json, readBody, requireAdmin } = require("./_lib");
 const { createUploadUrl, getPublicUrl, makeObjectKey } = require("./_storage");
 
 const DEFAULT_MAX_UPLOAD_MB = 1024;
@@ -34,6 +34,17 @@ module.exports = async function handler(req, res) {
     }
     if (size <= 0 || size > maxBytes) {
       json(res, 400, { error: `单个文件不能超过 ${Math.round(maxBytes / 1024 / 1024)}MB` });
+      return;
+    }
+
+    const sql = getSql();
+    const eligibleRows = await sql`
+      select id
+      from courses
+      where id = ${courseId} and status = 'published' and start_at <= now()
+    `;
+    if (!eligibleRows[0]) {
+      json(res, 400, { error: "课程未开播，不能上传回放和手册" });
       return;
     }
 

@@ -107,7 +107,7 @@ function getCourseRuntime(course) {
 }
 
 function canUploadCourseAssets(course) {
-  return course.published && parseDate(course.startAt) <= new Date();
+  return course.published && getCourseRuntime(course) !== "upcoming";
 }
 
 function statusLabel(status) {

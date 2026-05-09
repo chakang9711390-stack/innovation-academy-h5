@@ -52,6 +52,15 @@ module.exports = async function handler(req, res) {
       const body = await readBody(req);
       const courseId = String(body.courseId || "");
       if (body.mode === "assets") {
+        const eligibleRows = await sql`
+          select id
+          from courses
+          where id = ${courseId} and status = 'published' and start_at <= now()
+        `;
+        if (!eligibleRows[0]) {
+          json(res, 400, { error: "课程未开播，不能上传回放和手册" });
+          return;
+        }
         const replayAsset = body.replayAsset;
         const handbookAsset = body.handbookAsset;
         if (replayAsset?.storageKey) {
