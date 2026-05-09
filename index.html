@@ -101,7 +101,11 @@
           <label>课程形式<input id="courseSubtitle" maxlength="40" required value="带领大家完成告警链路排查" /></label>
           <div class="field-group">
             <span>适用岗位</span>
-            <div class="check-row" id="positionChecks"></div>
+            <div class="position-picker">
+              <div class="check-row" id="positionChecks"></div>
+              <button class="more-positions" id="toggleMorePositions" type="button" aria-expanded="false">更多岗位</button>
+              <div class="check-row more-position-row" id="morePositionChecks" hidden></div>
+            </div>
           </div>
           <div class="two-col">
             <label>开课时间<input id="startAt" type="datetime-local" required value="2026-05-18T20:00" /></label>

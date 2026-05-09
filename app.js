@@ -558,9 +558,24 @@ function renderRecordCard(course) {
 }
 
 function renderPositionChecks() {
-  $("#positionChecks").innerHTML = POSITION_OPTIONS
-    .map((pos, index) => `<label class="check-chip"><input type="checkbox" value="${pos}" ${index < 2 ? "checked" : ""} />${pos}</label>`)
+  const mainPositions = POSITION_OPTIONS.slice(0, 5);
+  const morePositions = POSITION_OPTIONS.slice(5);
+  $("#positionChecks").innerHTML = mainPositions
+    .map((pos, index) => renderPositionChip(pos, index < 2))
     .join("");
+  $("#morePositionChecks").innerHTML = morePositions
+    .map((pos) => renderPositionChip(pos, false))
+    .join("");
+}
+
+function renderPositionChip(position, checked) {
+  return `<label class="check-chip"><input type="checkbox" value="${position}" ${checked ? "checked" : ""} /><span>${position}</span></label>`;
+}
+
+function setMorePositionsVisible(visible) {
+  $("#morePositionChecks").hidden = !visible;
+  $("#toggleMorePositions").setAttribute("aria-expanded", String(visible));
+  $("#toggleMorePositions").textContent = visible ? "收起岗位" : "更多岗位";
 }
 
 function renderAssetOptions() {
@@ -685,6 +700,10 @@ function resetCourseForm() {
   $$("#positionChecks input").forEach((input, index) => {
     input.checked = index < 2;
   });
+  $$("#morePositionChecks input").forEach((input) => {
+    input.checked = false;
+  });
+  setMorePositionsVisible(false);
   $("#startAt").value = "2026-05-18T20:00";
   $("#endAt").value = "2026-05-18T21:30";
   $("#contentLines").value = "";
@@ -699,9 +718,10 @@ function fillCourseForm(course) {
   $("#editingCourseId").value = course.id;
   $("#courseTitle").value = course.title;
   $("#courseSubtitle").value = course.subtitle;
-  $$("#positionChecks input").forEach((input) => {
+  $$("#positionChecks input, #morePositionChecks input").forEach((input) => {
     input.checked = course.positions.includes(input.value);
   });
+  setMorePositionsVisible($$("#morePositionChecks input:checked").length > 0);
   $("#startAt").value = course.startAt.slice(0, 16);
   $("#endAt").value = course.endAt.slice(0, 16);
   $("#contentLines").value = course.content.join("\n");
@@ -863,6 +883,10 @@ function bindEvents() {
   });
 
   $("#saveDraft").addEventListener("click", () => addCourse(false));
+
+  $("#toggleMorePositions").addEventListener("click", () => {
+    setMorePositionsVisible($("#morePositionChecks").hidden);
+  });
 
   $("#assetCourse").addEventListener("change", updateAssetStatus);
 
