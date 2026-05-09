@@ -788,6 +788,13 @@ textarea:focus {
   margin-right: 6px;
 }
 
+.form-hint {
+  margin: -2px 0 4px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .asset-status {
   color: var(--muted);
   background: #f7fbfc;

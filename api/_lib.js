@@ -103,8 +103,12 @@ function requireAdmin(req, res) {
 }
 
 function normalizeCourse(row) {
-  const replayUrl = row.has_replay_file ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=replay` : row.replay_url || "";
-  const handbookUrl = row.has_handbook_file ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=handbook` : row.handbook_url || "";
+  const replayUrl = row.replay_storage_key || row.has_replay_file
+    ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=replay`
+    : row.replay_url || "";
+  const handbookUrl = row.handbook_storage_key || row.has_handbook_file
+    ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=handbook`
+    : row.handbook_url || "";
   return {
     id: row.id,
     title: row.title,
@@ -153,9 +157,11 @@ async function ensureSchema() {
       replay_file_name text,
       replay_content_type text,
       replay_data bytea,
+      replay_storage_key text,
       handbook_file_name text,
       handbook_content_type text,
       handbook_data bytea,
+      handbook_storage_key text,
       form text not null default '讲解',
       status text not null default 'published' check (status in ('draft', 'published')),
       created_at timestamptz not null default now(),
@@ -165,9 +171,11 @@ async function ensureSchema() {
   await sql`alter table courses add column if not exists replay_file_name text`;
   await sql`alter table courses add column if not exists replay_content_type text`;
   await sql`alter table courses add column if not exists replay_data bytea`;
+  await sql`alter table courses add column if not exists replay_storage_key text`;
   await sql`alter table courses add column if not exists handbook_file_name text`;
   await sql`alter table courses add column if not exists handbook_content_type text`;
   await sql`alter table courses add column if not exists handbook_data bytea`;
+  await sql`alter table courses add column if not exists handbook_storage_key text`;
   await sql`
     create table if not exists user_records (
       id text primary key,

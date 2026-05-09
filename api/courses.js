@@ -3,6 +3,7 @@ const { ensureSchema, getSql, json, normalizeCourse, readBody, requireAdmin } = 
 const COURSE_SELECT = `
   id, title, subtitle, positions, start_at, end_at, content, scenarios,
   teacher, live_url, replay_url, handbook_url, replay_file_name, handbook_file_name,
+  replay_storage_key, handbook_storage_key,
   replay_data is not null as has_replay_file,
   handbook_data is not null as has_handbook_file,
   form, status, created_at, updated_at
@@ -51,26 +52,28 @@ module.exports = async function handler(req, res) {
       const body = await readBody(req);
       const courseId = String(body.courseId || "");
       if (body.mode === "assets") {
-        const replayFile = body.replayFile;
-        const handbookFile = body.handbookFile;
-        if (replayFile?.data) {
+        const replayAsset = body.replayAsset;
+        const handbookAsset = body.handbookAsset;
+        if (replayAsset?.storageKey) {
           await sql`
             update courses
-            set replay_file_name = ${String(replayFile.name || "replay-video")},
-                replay_content_type = ${String(replayFile.type || "video/mp4")},
-                replay_data = decode(${String(replayFile.data)}, 'base64'),
-                replay_url = '',
+            set replay_file_name = ${String(replayAsset.name || "replay-video")},
+                replay_content_type = ${String(replayAsset.type || "video/mp4")},
+                replay_storage_key = ${String(replayAsset.storageKey)},
+                replay_url = ${String(replayAsset.url || "")},
+                replay_data = null,
                 updated_at = now()
             where id = ${courseId}
           `;
         }
-        if (handbookFile?.data) {
+        if (handbookAsset?.storageKey) {
           await sql`
             update courses
-            set handbook_file_name = ${String(handbookFile.name || "handbook.pdf")},
-                handbook_content_type = ${String(handbookFile.type || "application/pdf")},
-                handbook_data = decode(${String(handbookFile.data)}, 'base64'),
-                handbook_url = '',
+            set handbook_file_name = ${String(handbookAsset.name || "handbook.pdf")},
+                handbook_content_type = ${String(handbookAsset.type || "application/pdf")},
+                handbook_storage_key = ${String(handbookAsset.storageKey)},
+                handbook_url = ${String(handbookAsset.url || "")},
+                handbook_data = null,
                 updated_at = now()
             where id = ${courseId}
           `;

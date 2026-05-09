@@ -199,29 +199,28 @@ async function apiFetch(path, options = {}) {
   return data;
 }
 
-function readFileAsBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const value = String(reader.result || "");
-      resolve(value.includes(",") ? value.split(",").pop() : value);
-    };
-    reader.onerror = () => reject(new Error("文件读取失败"));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function buildUploadPayload(file) {
+async function uploadAssetFile(course, type, file) {
   if (!file) return null;
-  const maxBytes = 3 * 1024 * 1024;
-  if (file.size > maxBytes) {
-    throw new Error("单个文件暂限 3MB，请压缩后上传");
+  const contentType = file.type || "application/octet-stream";
+  const data = await apiFetch("/api/upload-url", {
+    method: "POST",
+    body: JSON.stringify({
+      courseId: course.id,
+      type,
+      fileName: file.name,
+      contentType,
+      size: file.size,
+    }),
+  });
+  const response = await fetch(data.uploadUrl, {
+    method: "PUT",
+    headers: { "content-type": contentType },
+    body: file,
+  });
+  if (!response.ok) {
+    throw new Error("上传对象存储失败，请检查存储桶 CORS 或稍后重试");
   }
-  return {
-    name: file.name,
-    type: file.type || "application/octet-stream",
-    data: await readFileAsBase64(file),
-  };
+  return data.asset;
 }
 
 function setCurrentUser(user, token) {
@@ -768,11 +767,11 @@ function bindEvents() {
       const submitButton = $("#assetFormPanel button[type='submit']");
       submitButton.disabled = true;
       submitButton.textContent = "上传中...";
-      const replayPayload = await buildUploadPayload(replayFile);
-      const handbookPayload = await buildUploadPayload(handbookFile);
+      const replayAsset = await uploadAssetFile(course, "replay", replayFile);
+      const handbookAsset = await uploadAssetFile(course, "handbook", handbookFile);
       const data = await apiFetch("/api/courses", {
         method: "PUT",
-        body: JSON.stringify({ mode: "assets", courseId: course.id, replayFile: replayPayload, handbookFile: handbookPayload }),
+        body: JSON.stringify({ mode: "assets", courseId: course.id, replayAsset, handbookAsset }),
       });
       const index = state.courses.findIndex((item) => item.id === course.id);
       state.courses[index] = data.course;

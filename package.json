@@ -4,7 +4,7 @@
   "description": "Innovation Academy H5 classroom with Vercel API and Neon storage.",
   "main": "app.js",
   "scripts": {
-    "check": "node --check app.js && node --check api/_lib.js && node --check api/auth.js && node --check api/courses.js && node --check api/records.js && node --check api/health.js && node --check api/assets.js"
+    "check": "node --check app.js && node --check api/_lib.js && node --check api/_storage.js && node --check api/auth.js && node --check api/courses.js && node --check api/records.js && node --check api/health.js && node --check api/assets.js && node --check api/upload-url.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/chakang9711390-stack/innovation-academy-h5#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0",
+    "@aws-sdk/s3-request-presigner": "^3.1045.0",
     "@neondatabase/serverless": "^1.1.0"
   }
 }
