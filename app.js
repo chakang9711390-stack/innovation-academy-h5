@@ -1,6 +1,7 @@
 const state = {
   isAdmin: false,
   currentUser: null,
+  token: "",
   authMode: "login",
   activeTab: "calendar",
   month: new Date(2026, 3, 1),
@@ -84,9 +85,7 @@ const tabs = [
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const AUTH_USERS_KEY = "mijing-academy-users";
-const AUTH_SESSION_KEY = "mijing-academy-session";
-const ADMIN_USER = { username: "kete2026", password: "999999", role: "admin" };
+const AUTH_SESSION_KEY = "innovation-academy-session";
 
 const fmtDate = (date) => {
   const yyyy = date.getFullYear();
@@ -145,34 +144,27 @@ function showToast(message) {
   showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 2200);
 }
 
-function getStoredUsers() {
-  try {
-    const users = JSON.parse(localStorage.getItem(AUTH_USERS_KEY) || "[]");
-    return Array.isArray(users) ? users : [];
-  } catch {
-    return [];
-  }
+async function apiFetch(path, options = {}) {
+  const headers = { "content-type": "application/json", ...(options.headers || {}) };
+  if (state.token) headers.authorization = `Bearer ${state.token}`;
+  const response = await fetch(path, { ...options, headers });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "请求失败，请重试");
+  return data;
 }
 
-function saveStoredUsers(users) {
-  localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
-}
-
-function findUser(username) {
-  if (username === ADMIN_USER.username) return ADMIN_USER;
-  return getStoredUsers().find((user) => user.username === username);
-}
-
-function setCurrentUser(user) {
+function setCurrentUser(user, token) {
   state.currentUser = { username: user.username, role: user.role };
+  state.token = token;
   state.isAdmin = user.role === "admin";
-  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(state.currentUser));
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ user: state.currentUser, token }));
   renderAuthState();
 }
 
 function clearCurrentUser() {
   state.currentUser = null;
   state.isAdmin = false;
+  state.token = "";
   state.authMode = "login";
   localStorage.removeItem(AUTH_SESSION_KEY);
   if (state.activeTab === "manage") state.activeTab = "calendar";
@@ -184,12 +176,10 @@ function clearCurrentUser() {
 function restoreSession() {
   try {
     const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
-    if (!session?.username) return;
-    const user = findUser(session.username);
-    if (user) {
-      state.currentUser = { username: user.username, role: user.role };
-      state.isAdmin = user.role === "admin";
-    }
+    if (!session?.user?.username || !session?.token) return;
+    state.currentUser = session.user;
+    state.token = session.token;
+    state.isAdmin = session.user.role === "admin";
   } catch {
     localStorage.removeItem(AUTH_SESSION_KEY);
   }
@@ -216,7 +206,7 @@ function renderAuthMode() {
   $("#authTip").textContent = isRegister ? "注册成功后将以普通成员身份进入课堂" : "管理员初始账号：kete2026，密码：999999";
 }
 
-function handleAuthSubmit() {
+async function handleAuthSubmit() {
   const username = $("#authUsername").value.trim();
   const password = $("#authPassword").value;
   const confirmPassword = $("#authConfirmPassword").value;
@@ -226,36 +216,17 @@ function handleAuthSubmit() {
     return;
   }
 
-  if (state.authMode === "login") {
-    const user = findUser(username);
-    if (!user || user.password !== password) {
-      showToast("账号或密码错误");
-      return;
-    }
-    setCurrentUser(user);
-    showToast(user.role === "admin" ? "管理员登录成功" : "登录成功");
-    return;
+  try {
+    const data = await apiFetch("/api/auth", {
+      method: "POST",
+      body: JSON.stringify({ mode: state.authMode, username, password, confirmPassword }),
+    });
+    setCurrentUser(data.user, data.token);
+    await loadAppData();
+    showToast(state.authMode === "register" ? "注册成功，已登录" : data.user.role === "admin" ? "管理员登录成功" : "登录成功");
+  } catch (error) {
+    showToast(error.message);
   }
-
-  if (username === ADMIN_USER.username || getStoredUsers().some((user) => user.username === username)) {
-    showToast("账号已存在");
-    return;
-  }
-  if (password.length < 6) {
-    showToast("密码至少 6 位");
-    return;
-  }
-  if (password !== confirmPassword) {
-    showToast("两次密码不一致");
-    return;
-  }
-
-  const users = getStoredUsers();
-  const user = { username, password, role: "member" };
-  users.push(user);
-  saveStoredUsers(users);
-  setCurrentUser(user);
-  showToast("注册成功，已登录");
 }
 
 function renderTabs() {
@@ -440,7 +411,32 @@ function updateAssetStatus() {
   $("#assetStatus").innerHTML = `当前回放：${course.replayUrl ? "已上传" : "未上传"}<br />当前手册：${course.handbookUrl || "未上传"}`;
 }
 
-function addCourse(published) {
+async function loadCourses() {
+  const data = await apiFetch("/api/courses");
+  state.courses = data.courses;
+}
+
+async function loadRecords() {
+  if (!state.token) return;
+  const data = await apiFetch("/api/records");
+  state.watched = new Set(data.watched || []);
+  state.ratings = data.ratings || {};
+}
+
+async function loadAppData() {
+  try {
+    await loadCourses();
+    await loadRecords();
+    renderCalendar();
+    renderCourses();
+    renderRecords();
+    renderAssetOptions();
+  } catch (error) {
+    showToast(error.message || "加载失败，请重试");
+  }
+}
+
+async function addCourse(published) {
   const startAt = $("#startAt").value;
   const endAt = $("#endAt").value;
   if (new Date(endAt) <= new Date(startAt)) {
@@ -453,8 +449,7 @@ function addCourse(published) {
     return;
   }
   const lines = (id) => $(id).value.split("\n").map((line) => line.trim()).filter(Boolean);
-  const course = {
-    id: `c${Date.now()}`,
+  const payload = {
     title: $("#courseTitle").value.trim(),
     subtitle: $("#courseSubtitle").value.trim(),
     positions,
@@ -464,16 +459,19 @@ function addCourse(published) {
     scenarios: lines("#scenarioLines").slice(0, 8),
     teacher: $("#teacherName").value.trim(),
     liveUrl: $("#liveUrl").value.trim(),
-    replayUrl: "",
-    handbookUrl: "",
     form: "在线实操",
     published,
   };
-  state.courses.push(course);
-  renderCalendar();
-  renderCourses();
-  renderAssetOptions();
-  showToast(published ? "已发布，学员端实时可见" : "草稿已保存");
+  try {
+    const data = await apiFetch("/api/courses", { method: "POST", body: JSON.stringify(payload) });
+    state.courses.push(data.course);
+    renderCalendar();
+    renderCourses();
+    renderAssetOptions();
+    showToast(published ? "已发布，学员端实时可见" : "草稿已保存");
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function bindEvents() {
@@ -531,7 +529,7 @@ function bindEvents() {
     window.setTimeout(() => $(`#course-${card.dataset.course}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   });
 
-  document.body.addEventListener("click", (event) => {
+  document.body.addEventListener("click", async (event) => {
     const actionButton = event.target.closest("[data-action]");
     if (!actionButton || actionButton.disabled) return;
     const course = state.courses.find((item) => item.id === actionButton.dataset.course);
@@ -542,6 +540,7 @@ function bindEvents() {
     if (action === "replay" || action === "recordReplay") {
       state.watched.add(course.id);
       showToast("正在打开回放");
+      apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action: "watch", courseId: course.id }) }).catch((error) => showToast(error.message));
       if (course.replayUrl) window.open(course.replayUrl, "_blank");
       renderRecords();
     }
@@ -552,9 +551,11 @@ function bindEvents() {
     const star = event.target.closest(".star");
     if (!star) return;
     const courseId = star.closest(".stars").dataset.course;
-    state.ratings[courseId] = Number(star.dataset.score);
+    const score = Number(star.dataset.score);
+    state.ratings[courseId] = score;
     renderRecords();
     showToast("评分已提交");
+    apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action: "rate", courseId, score }) }).catch((error) => showToast(error.message));
   });
 
   $$("#manageView .subtab").forEach((button) => {
@@ -577,7 +578,7 @@ function bindEvents() {
 
   $("#assetCourse").addEventListener("change", updateAssetStatus);
 
-  $("#assetFormPanel").addEventListener("submit", (event) => {
+  $("#assetFormPanel").addEventListener("submit", async (event) => {
     event.preventDefault();
     const course = state.courses.find((item) => item.id === $("#assetCourse").value);
     const url = $("#replayUrl").value.trim();
@@ -591,16 +592,24 @@ function bindEvents() {
       showToast("文件大小超限，请压缩后重新上传");
       return;
     }
-    course.replayUrl = url;
-    if (file) course.handbookUrl = file.name;
-    updateAssetStatus();
-    renderCourses();
-    renderRecords();
-    showToast("已更新，学员端实时生效");
+    try {
+      const data = await apiFetch("/api/courses", {
+        method: "PUT",
+        body: JSON.stringify({ courseId: course.id, replayUrl: url, handbookUrl: file ? file.name : course.handbookUrl }),
+      });
+      const index = state.courses.findIndex((item) => item.id === course.id);
+      state.courses[index] = data.course;
+      updateAssetStatus();
+      renderCourses();
+      renderRecords();
+      showToast("已更新，学员端实时生效");
+    } catch (error) {
+      showToast(error.message);
+    }
   });
 }
 
-function init() {
+async function init() {
   restoreSession();
   renderTabs();
   renderCalendar();
@@ -611,6 +620,7 @@ function init() {
   renderAuthMode();
   renderAuthState();
   bindEvents();
+  if (state.currentUser) await loadAppData();
 }
 
 init();
