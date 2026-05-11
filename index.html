@@ -35,6 +35,7 @@
           <h1>创新学院</h1>
         </div>
         <div class="header-actions">
+          <span class="reminder-badge" id="reminderBadge" aria-label="已预约课程数"><span></span><b>0</b></span>
           <span class="user-badge" id="userBadge">未登录</span>
           <button class="role-switch" id="logoutButton" type="button">退出</button>
           <span class="pill">学院直播</span>
@@ -63,6 +64,7 @@
       </section>
 
       <section class="view" id="squareView" aria-labelledby="tab-square">
+        <div class="square-filter" id="squarePositionFilter" aria-label="岗位筛选"></div>
         <div class="section-title">
           <h3>本期课程</h3>
           <span id="upcomingCount"></span>
@@ -162,6 +164,57 @@
           <button class="secondary-button" type="button" id="cancelDeleteCourse">取消</button>
           <button class="danger-button" type="button" id="confirmDeleteCourse">删除</button>
         </div>
+      </div>
+    </div>
+
+    <div class="rating-sheet" id="ratingSheet" aria-hidden="true">
+      <div class="rating-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="ratingSheetTitle">
+        <div class="rating-sheet-head">
+          <div>
+            <p class="eyebrow">课程评价</p>
+            <h3 id="ratingSheetTitle">AI培训课堂第4期 · 评分表</h3>
+          </div>
+          <button class="icon-button" id="closeRatingSheet" type="button" aria-label="关闭">×</button>
+        </div>
+        <p class="rating-course" id="ratingCourseIntro"></p>
+        <form id="ratingForm" class="rating-form">
+          <input id="ratingCourseId" type="hidden" />
+          <label>
+            <span>对 AI 直播课堂的整体打分</span>
+            <span class="rating-stars" data-rating-field="ratingOverall"></span>
+            <input id="ratingOverall" type="hidden" required />
+          </label>
+          <label>
+            <span>老师讲解是否清晰完整，并对工作有帮助</span>
+            <span class="rating-stars" data-rating-field="ratingClarity"></span>
+            <input id="ratingClarity" type="hidden" />
+          </label>
+          <label>
+            <span>本次课程内容难度</span>
+            <select id="ratingDifficulty">
+              <option value="适中">适中</option>
+              <option value="偏简单">偏简单</option>
+              <option value="偏困难">偏困难</option>
+            </select>
+          </label>
+          <label>
+            <span>是否完成安装和基础配置</span>
+            <select id="ratingCompleted">
+              <option value="是">是</option>
+              <option value="否">否</option>
+            </select>
+          </label>
+          <label>
+            <span id="ratingTeacherLabel">对主讲老师的综合评价</span>
+            <span class="rating-stars" data-rating-field="ratingTeacher"></span>
+            <input id="ratingTeacher" type="hidden" />
+          </label>
+          <label>
+            <span>你希望下次课程改进或新增哪些内容？（选填）</span>
+            <textarea id="ratingComment" rows="3" placeholder="可以写下希望补充的案例、节奏或资料"></textarea>
+          </label>
+          <button class="primary-button full" type="submit">提交评价</button>
+        </form>
       </div>
     </div>
 

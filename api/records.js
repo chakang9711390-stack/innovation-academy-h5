@@ -12,10 +12,11 @@ module.exports = async function handler(req, res) {
     const sql = getSql();
 
     if (req.method === "GET") {
-      const watched = await sql`select course_id from user_records where username = ${user.username}`;
+      const watched = await sql`select course_id, reminded_at from user_records where username = ${user.username}`;
       const ratings = await sql`select course_id, score from ratings where username = ${user.username}`;
       json(res, 200, {
         watched: watched.map((row) => row.course_id),
+        reminders: watched.filter((row) => row.reminded_at).map((row) => row.course_id),
         ratings: Object.fromEntries(ratings.map((row) => [row.course_id, row.score])),
       });
       return;
@@ -25,11 +26,19 @@ module.exports = async function handler(req, res) {
       const body = await readBody(req);
       const courseId = String(body.courseId || "");
       if (["watch", "remind", "download"].includes(body.action)) {
+        const remindAt = body.action === "remind" ? new Date().toISOString() : null;
+        const downloadAt = body.action === "download" ? new Date().toISOString() : null;
         await sql`
-          insert into user_records (id, username, course_id)
-          values (${makeId("r")}, ${user.username}, ${courseId})
+          insert into user_records (id, username, course_id, reminded_at, downloaded_at)
+          values (${makeId("r")}, ${user.username}, ${courseId}, ${remindAt}, ${downloadAt})
           on conflict (username, course_id) do update set watched_at = now()
         `;
+        if (body.action === "remind") {
+          await sql`update user_records set reminded_at = coalesce(reminded_at, now()) where username = ${user.username} and course_id = ${courseId}`;
+        }
+        if (body.action === "download") {
+          await sql`update user_records set downloaded_at = now() where username = ${user.username} and course_id = ${courseId}`;
+        }
         json(res, 200, { ok: true });
         return;
       }

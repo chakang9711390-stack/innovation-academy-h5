@@ -184,6 +184,28 @@ h1 {
   align-self: center;
 }
 
+.reminder-badge {
+  min-width: 54px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--mint-deep);
+  background: rgba(255, 255, 255, 0.74);
+  font-weight: 400;
+}
+
+.reminder-badge span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 0 5px var(--mint-soft);
+}
+
 .pill,
 .role-switch,
 .user-badge {
@@ -404,6 +426,25 @@ h1 {
   text-align: left;
   width: 100%;
   color: inherit;
+  cursor: pointer;
+}
+
+.event-card.is-ended {
+  opacity: 0.72;
+}
+
+.event-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.event-card-actions em {
+  color: var(--mint-deep);
+  font-style: normal;
+  font-size: 14px;
 }
 
 .date-block {
@@ -516,6 +557,35 @@ h1 {
   opacity: 0.7;
 }
 
+.square-filter {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 0 16px;
+  margin-top: -2px;
+  scrollbar-width: none;
+}
+
+.square-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-weight: 400;
+}
+
+.filter-chip.is-active {
+  color: var(--mint-deep);
+  background: var(--mint-soft);
+  border-color: #bdece4;
+}
+
 .course-head {
   display: flex;
   justify-content: space-between;
@@ -609,6 +679,14 @@ h1 {
 .danger-button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.rating-locked:disabled {
+  opacity: 1;
+  cursor: default;
+  color: var(--mint-deep);
+  background: var(--mint-soft);
+  border-color: #bdece4;
 }
 
 .full {
@@ -999,7 +1077,8 @@ textarea:focus {
 }
 
 .replay-modal,
-.confirm-modal {
+.confirm-modal,
+.rating-sheet {
   position: fixed;
   inset: 0;
   z-index: 25;
@@ -1012,7 +1091,8 @@ textarea:focus {
 }
 
 .replay-modal.is-visible,
-.confirm-modal.is-visible {
+.confirm-modal.is-visible,
+.rating-sheet.is-visible {
   display: flex;
 }
 
@@ -1036,6 +1116,85 @@ textarea:focus {
   background: #fff;
   padding: 24px;
   box-shadow: 0 28px 80px rgba(20, 41, 50, 0.2);
+}
+
+.rating-sheet {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.rating-sheet-panel {
+  width: min(720px, 100%);
+  max-height: min(88vh, 820px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 24px 24px 0 0;
+  background: #fff;
+  padding: 24px;
+  box-shadow: 0 -22px 70px rgba(20, 41, 50, 0.18);
+}
+
+.rating-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rating-sheet-head .eyebrow {
+  margin: 0 0 8px;
+}
+
+.rating-sheet-head h3 {
+  color: #19323d;
+  font-weight: 500;
+  font-size: 24px;
+}
+
+.rating-course {
+  margin: 12px 0 18px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.rating-form {
+  display: grid;
+  gap: 16px;
+}
+
+.rating-form label {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.rating-form select,
+.rating-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: #19323d;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 8px;
+}
+
+.rating-star {
+  border: 0;
+  background: transparent;
+  color: #c9d7dc;
+  font-size: 32px;
+  line-height: 1;
+  padding: 0;
+}
+
+.rating-star.is-on {
+  color: #f2b84b;
 }
 
 .confirm-dialog h3 {
@@ -1285,6 +1444,7 @@ textarea:focus {
     max-width: 46%;
   }
 
+  .reminder-badge,
   .pill,
   .role-switch,
   .user-badge {
@@ -1404,8 +1564,28 @@ textarea:focus {
   }
 
   .replay-modal,
-  .confirm-modal {
+  .confirm-modal,
+  .rating-sheet {
     padding: 12px;
+  }
+
+  .rating-sheet {
+    padding: 0;
+  }
+
+  .rating-sheet-panel {
+    width: 100%;
+    max-height: 86vh;
+    border-radius: 20px 20px 0 0;
+    padding: 18px;
+  }
+
+  .rating-sheet-head h3 {
+    font-size: 20px;
+  }
+
+  .rating-star {
+    font-size: 30px;
   }
 
   .replay-dialog {

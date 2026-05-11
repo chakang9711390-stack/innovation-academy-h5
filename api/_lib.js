@@ -182,9 +182,13 @@ async function ensureSchema() {
       username text not null references users(username) on delete cascade,
       course_id text not null references courses(id) on delete cascade,
       watched_at timestamptz not null default now(),
+      reminded_at timestamptz,
+      downloaded_at timestamptz,
       unique(username, course_id)
     )
   `;
+  await sql`alter table user_records add column if not exists reminded_at timestamptz`;
+  await sql`alter table user_records add column if not exists downloaded_at timestamptz`;
   await sql`
     create table if not exists ratings (
       id text primary key,

@@ -6,6 +6,8 @@ const state = {
   activeTab: "calendar",
   month: new Date(2026, 3, 1),
   selectedDate: "2026-04-30",
+  positionFilter: "全部",
+  ratingDraft: {},
   ratings: {},
   watched: new Set(),
   reminders: new Set(),
@@ -444,6 +446,11 @@ function switchTab(tab) {
   if (tab === "manage") renderAssetOptions();
 }
 
+function renderReminderBadge() {
+  const badge = $("#reminderBadge b");
+  if (badge) badge.textContent = state.reminders.size;
+}
+
 function renderCalendar() {
   const year = state.month.getFullYear();
   const month = state.month.getMonth();
@@ -472,7 +479,7 @@ function renderCalendar() {
 function renderEventList() {
   const events = monthEvents()
     .filter((course) => !state.selectedDate || course.startAt.startsWith(state.selectedDate))
-    .sort((a, b) => parseDate(a.startAt) - parseDate(b.startAt));
+    .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
   const monthName = state.month.toLocaleDateString("zh-CN", { month: "long" });
   $("#calendarListTitle").textContent = state.selectedDate ? `${Number(state.selectedDate.slice(8, 10))}日直播安排` : `${monthName}直播安排`;
@@ -491,8 +498,9 @@ function renderEventCard(course) {
   const day = String(start.getDate()).padStart(2, "0");
   const mon = start.toLocaleString("en", { month: "short" }).toUpperCase();
   const status = getCourseRuntime(course);
+  const reminded = state.reminders.has(course.id);
   return `
-    <button class="event-card" type="button" data-course="${course.id}">
+    <article class="event-card ${status === "ended" ? "is-ended" : ""}" data-course="${course.id}">
       <span class="date-block"><span><strong>${day}</strong><br />${mon}</span></span>
       <span class="event-body">
         <h4>${course.title}</h4>
@@ -502,19 +510,31 @@ function renderEventCard(course) {
           <span class="tag form">${course.form}</span>
           <span class="status ${status}">${statusLabel(status)}</span>
         </span>
+        <span class="event-card-actions">
+          ${status === "ended" ? "" : `<button class="secondary-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>`}
+          ${reminded ? `<em>提前1天 · 提前1小时提醒</em>` : ""}
+        </span>
       </span>
-    </button>
+    </article>
   `;
 }
 
 function renderCourses() {
-  const published = state.courses.filter((course) => course.published);
+  renderSquarePositionFilter();
+  const published = state.courses.filter((course) => course.published && (state.positionFilter === "全部" || course.positions.includes(state.positionFilter)));
   const upcoming = published.filter((course) => getCourseRuntime(course) !== "ended").sort((a, b) => parseDate(a.startAt) - parseDate(b.startAt));
   const past = published.filter((course) => getCourseRuntime(course) === "ended").sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
   $("#upcomingCount").textContent = `${upcoming.length} 门`;
   $("#upcomingCourses").innerHTML = upcoming.length ? upcoming.map(renderCourseCard).join("") : `<div class="empty-state">暂无本期课程</div>`;
   $("#pastCourses").innerHTML = past.length ? past.map(renderCourseCard).join("") : `<div class="empty-state">暂无往期课程</div>`;
+}
+
+function renderSquarePositionFilter() {
+  const options = ["全部", ...POSITION_OPTIONS];
+  $("#squarePositionFilter").innerHTML = options
+    .map((position) => `<button class="filter-chip ${state.positionFilter === position ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`)
+    .join("");
 }
 
 function renderCourseCard(course) {
@@ -557,16 +577,9 @@ function renderCourseCard(course) {
 }
 
 function renderCourseAction(course, status) {
-  if (status === "upcoming") {
-    const reminded = state.reminders.has(course.id);
-    return `<button class="secondary-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已加入开播提醒" : "提醒我"}</button>`;
-  }
-  if (status === "live") {
-    return `<button class="primary-button" type="button" data-action="live" data-course="${course.id}">进入直播间</button>`;
-  }
   return `
-    <button class="primary-button" type="button" data-action="replay" data-course="${course.id}">观看回放</button>
-    <button class="secondary-button" type="button" data-action="download" data-course="${course.id}" ${course.handbookUrl ? "" : 'disabled title="手册上传中"'}>下载知识手册</button>
+    <button class="primary-button" type="button" data-action="replay" data-course="${course.id}" ${course.replayUrl ? "" : 'disabled title="回放上传中"'}>点击回放</button>
+    <button class="secondary-button" type="button" data-action="download" data-course="${course.id}" ${course.handbookUrl ? "" : 'disabled title="手册上传中"'}>下载说明书</button>
   `;
 }
 
@@ -581,20 +594,13 @@ function renderRecords() {
 function renderRecordCard(course) {
   const rating = state.ratings[course.id] || 0;
   const date = course.startAt.slice(0, 10).replaceAll("-", ".");
+  const ratingText = rating ? `已评价 · ${"★".repeat(rating)}${"☆".repeat(5 - rating)}` : "点击评价";
   return `
     <article class="record-card">
       <h4>${course.title}</h4>
       <p class="meta">直播日期 · ${date}</p>
       <div class="record-actions">
-        <button class="primary-button" type="button" data-action="recordReplay" data-course="${course.id}" ${course.replayUrl ? "" : 'disabled title="回放上传中"'}>回看视频</button>
-        <button class="secondary-button" type="button" data-action="download" data-course="${course.id}" ${course.handbookUrl ? "" : 'disabled title="手册上传中"'}>下载知识手册</button>
-      </div>
-      <div class="rating-line">
-        <span>${course.teacher}</span>
-        <span class="stars" data-course="${course.id}">
-          ${[1, 2, 3, 4, 5].map((score) => `<button class="star ${score <= rating ? "is-on" : ""}" type="button" data-score="${score}" aria-label="${score}星">★</button>`).join("")}
-        </span>
-        <span class="${rating ? "rated" : ""}">${rating ? "已评价" : "点击评分"}</span>
+        <button class="${rating ? "secondary-button rating-locked" : "primary-button"}" type="button" data-action="openRating" data-course="${course.id}" ${rating ? "disabled" : ""}>${ratingText}</button>
       </div>
     </article>
   `;
@@ -617,6 +623,82 @@ function renderPositionChip(position, checked) {
 
 function renderPositionMenuItem(position, checked) {
   return `<label class="position-menu-item ${checked ? "is-selected" : ""}"><input type="checkbox" value="${position}" ${checked ? "checked" : ""} /><span>${position}</span></label>`;
+}
+
+function renderRatingStars(fieldId, value = 0) {
+  const container = $(`[data-rating-field="${fieldId}"]`);
+  if (!container) return;
+  container.innerHTML = [1, 2, 3, 4, 5]
+    .map((score) => `<button class="rating-star ${score <= value ? "is-on" : ""}" type="button" data-rating-target="${fieldId}" data-score="${score}" aria-label="${score}星">★</button>`)
+    .join("");
+}
+
+function setRatingValue(fieldId, score) {
+  $(`#${fieldId}`).value = score;
+  state.ratingDraft[fieldId] = score;
+  renderRatingStars(fieldId, score);
+}
+
+function resetRatingSheet() {
+  state.ratingDraft = {};
+  ["ratingOverall", "ratingClarity", "ratingTeacher"].forEach((fieldId) => {
+    $(`#${fieldId}`).value = "";
+    renderRatingStars(fieldId, 0);
+  });
+  $("#ratingDifficulty").value = "适中";
+  $("#ratingCompleted").value = "是";
+  $("#ratingComment").value = "";
+}
+
+function openRatingSheet(course) {
+  if (state.ratings[course.id]) return;
+  resetRatingSheet();
+  $("#ratingCourseId").value = course.id;
+  $("#ratingCourseIntro").textContent = `${course.title} · ${course.subtitle}`;
+  $("#ratingTeacherLabel").textContent = `对本次主讲老师 ${course.teacher.split("-").pop()} 的综合评价`;
+  $("#ratingSheet").classList.add("is-visible");
+  $("#ratingSheet").setAttribute("aria-hidden", "false");
+}
+
+function closeRatingSheet() {
+  $("#ratingSheet")?.classList.remove("is-visible");
+  $("#ratingSheet")?.setAttribute("aria-hidden", "true");
+}
+
+async function submitRatingSheet() {
+  const courseId = $("#ratingCourseId").value;
+  const score = Number($("#ratingOverall").value);
+  if (!score) {
+    showToast("请先选择整体评分");
+    return;
+  }
+  const submitButton = $("#ratingForm button[type='submit']");
+  submitButton.disabled = true;
+  submitButton.textContent = "提交中...";
+  try {
+    await apiFetch("/api/records", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "rate",
+        courseId,
+        score,
+        clarityScore: Number($("#ratingClarity").value || score),
+        teacherScore: Number($("#ratingTeacher").value || score),
+        difficulty: $("#ratingDifficulty").value,
+        completedSetup: $("#ratingCompleted").value,
+        comment: $("#ratingComment").value.trim(),
+      }),
+    });
+    state.ratings[courseId] = score;
+    closeRatingSheet();
+    renderRecords();
+    showToast("评价已提交");
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "提交评价";
+  }
 }
 
 function setMorePositionsVisible(visible) {
@@ -705,7 +787,9 @@ async function loadRecords() {
   if (!state.token) return;
   const data = await apiFetch("/api/records");
   state.watched = new Set(data.watched || []);
+  state.reminders = new Set(data.reminders || []);
   state.ratings = data.ratings || {};
+  renderReminderBadge();
 }
 
 async function loadAppData() {
@@ -729,7 +813,7 @@ function getCoursePayload(published) {
     showToast("结束时间需晚于开课时间");
     return null;
   }
-  const positions = $$("#positionChecks input:checked").map((input) => input.value);
+  const positions = $$("#positionChecks input:checked, #morePositionChecks input:checked").map((input) => input.value);
   if (!positions.length) {
     showToast("请选择至少一个适用岗位");
     return null;
@@ -874,6 +958,7 @@ function bindEvents() {
   });
 
   $("#eventList").addEventListener("click", (event) => {
+    if (event.target.closest("[data-action]")) return;
     const card = event.target.closest("[data-course]");
     if (!card) return;
     switchTab("square");
@@ -881,6 +966,11 @@ function bindEvents() {
   });
 
   document.body.addEventListener("click", async (event) => {
+    const ratingStar = event.target.closest("[data-rating-target]");
+    if (ratingStar) {
+      setRatingValue(ratingStar.dataset.ratingTarget, Number(ratingStar.dataset.score));
+      return;
+    }
     const actionButton = event.target.closest("[data-action]");
     if (!actionButton || actionButton.disabled) return;
     const course = state.courses.find((item) => item.id === actionButton.dataset.course);
@@ -889,8 +979,10 @@ function bindEvents() {
     if (action === "signup") {
       state.reminders.add(course.id);
       markCourseRecorded(course.id, "remind");
+      renderCalendar();
       renderCourses();
-      showToast("已加入开播提醒");
+      renderReminderBadge();
+      showToast("已预约，提前1天和提前1小时提醒");
     }
     if (action === "live") window.open(course.liveUrl, "_blank");
     if (action === "replay" || action === "recordReplay") {
@@ -917,17 +1009,25 @@ function bindEvents() {
         showToast(course.handbookUrl ? "手册链接格式异常，请联系管理员" : "手册上传中");
       }
     }
+    if (action === "openRating") {
+      openRatingSheet(course);
+    }
   });
 
-  $("#recordList").addEventListener("click", (event) => {
-    const star = event.target.closest(".star");
-    if (!star) return;
-    const courseId = star.closest(".stars").dataset.course;
-    const score = Number(star.dataset.score);
-    state.ratings[courseId] = score;
-    renderRecords();
-    showToast("评分已提交");
-    apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action: "rate", courseId, score }) }).catch((error) => showToast(error.message));
+  $("#squarePositionFilter").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-position-filter]");
+    if (!button) return;
+    state.positionFilter = button.dataset.positionFilter;
+    renderCourses();
+  });
+
+  $("#closeRatingSheet").addEventListener("click", closeRatingSheet);
+  $("#ratingSheet").addEventListener("click", (event) => {
+    if (event.target.id === "ratingSheet") closeRatingSheet();
+  });
+  $("#ratingForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await submitRatingSheet();
   });
 
   $$("#manageView .subtab").forEach((button) => {
@@ -1075,6 +1175,7 @@ function bindEvents() {
   });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeFullscreenPlayer();
+    if (event.key === "Escape") closeRatingSheet();
     if (event.key === "Escape" && $("#deleteConfirmModal").classList.contains("is-visible")) {
       closeDeleteConfirm();
     }
@@ -1088,6 +1189,7 @@ async function init() {
   renderCourses();
   renderRecords();
   renderPositionChecks();
+  renderReminderBadge();
   renderAssetOptions();
   renderAdminCourseList();
   renderAuthMode();
