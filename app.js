@@ -1177,7 +1177,7 @@ function renderAdminCourseItem(course) {
       <div class="admin-cell asset-mark" data-label="说明书">${handbookMark}</div>
       <div class="admin-actions" data-label="操作">
         <button class="admin-action-button" type="button" data-admin-action="upload" data-course="${course.id}">上传</button>
-        <button class="admin-action-button is-accent" type="button" data-admin-action="message" data-course="${course.id}">提醒消息</button>
+        <button class="admin-action-button is-accent" type="button" data-admin-action="message" data-course="${course.id}">提醒</button>
         <button class="admin-action-button" type="button" data-admin-action="reviews" data-course="${course.id}">评价</button>
         <button class="admin-icon-action" type="button" data-admin-action="edit" data-course="${course.id}" aria-label="编辑">编辑</button>
         <button class="admin-icon-action is-danger" type="button" data-admin-action="delete" data-course="${course.id}" aria-label="删除">删除</button>

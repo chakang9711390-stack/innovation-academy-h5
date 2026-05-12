@@ -1017,11 +1017,12 @@ h1 {
 .admin-action-button,
 .admin-icon-action {
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: #7d3d27;
   color: #fff;
-  padding: 7px 8px;
-  font-size: 12px;
+  padding: 7px 9px;
+  font-size: 13px;
+  line-height: 1;
   font-weight: 500;
 }
 
@@ -1048,7 +1049,7 @@ h1 {
 .admin-table-head,
 .admin-course-row {
   display: grid;
-  grid-template-columns: minmax(190px, 1.5fr) 96px 78px 48px 64px minmax(210px, 0.95fr);
+  grid-template-columns: minmax(210px, 1.6fr) 100px 76px 42px 58px 176px;
   align-items: center;
   gap: 8px;
 }
@@ -1063,8 +1064,9 @@ h1 {
 }
 
 .admin-course-row {
-  padding: 14px 16px;
+  padding: 13px 16px;
   border-bottom: 1px solid #e5cbb8;
+  min-height: 104px;
 }
 
 .admin-course-row:last-child {
@@ -1074,16 +1076,17 @@ h1 {
 .admin-course-main h4 {
   margin: 0 0 5px;
   color: #2d1d15;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.38;
+  overflow-wrap: anywhere;
 }
 
 .admin-course-main p,
 .admin-cell,
 .admin-mobile-assets {
   color: #b67b6a;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .admin-mobile-assets,
@@ -1098,9 +1101,11 @@ h1 {
 
 .admin-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 58px 58px 42px;
   gap: 6px;
   min-width: 0;
+  align-content: center;
+  justify-content: start;
 }
 
 .admin-actions button {
@@ -1108,6 +1113,22 @@ h1 {
   min-width: 0;
   white-space: nowrap;
   text-align: center;
+}
+
+.admin-actions .admin-action-button:nth-child(3) {
+  grid-column: 1;
+}
+
+.admin-actions .admin-icon-action:nth-child(4) {
+  grid-column: 2;
+}
+
+.admin-actions .admin-icon-action:nth-child(5) {
+  grid-column: 3;
+}
+
+.admin-actions .admin-action-button:nth-child(2) {
+  grid-column: 2 / span 2;
 }
 
 .publish-course-form {
