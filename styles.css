@@ -1944,3 +1944,429 @@ textarea:focus {
     grid-column: 1;
   }
 }
+
+/* Prototype-aligned H5 course square/detail */
+body {
+  background: #f7eee8;
+}
+
+.app-shell {
+  width: min(100vw, 720px);
+  background: #fff8f2;
+  border-color: #ead4c5;
+}
+
+.topbar {
+  min-height: 50px;
+  padding: 8px 22px;
+  background: #fff8f2;
+  border-bottom: 1px solid #ead4c5;
+}
+
+.topbar .eyebrow {
+  display: none;
+}
+
+.topbar h1,
+h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #24140f;
+}
+
+.tabs {
+  min-height: 48px;
+  justify-content: flex-start;
+  padding: 0 16px;
+  background: #fff8f2;
+  border-bottom-color: #ead4c5;
+}
+
+.tab {
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #9b725f;
+}
+
+.tab.is-active {
+  color: #de4f1f;
+}
+
+.tab.is-active::after {
+  height: 2px;
+  background: #de4f1f;
+}
+
+.view {
+  padding: 20px 22px 32px;
+}
+
+.square-filter {
+  margin: 0 -22px 18px;
+  padding: 0 22px 2px;
+  gap: 10px;
+}
+
+.square-filter .filter-chip {
+  min-height: 34px;
+  padding: 0 15px;
+  border-color: #ead4c5;
+  background: #fffaf6;
+  color: #7c4b37;
+  font-size: 14px;
+}
+
+.square-filter .filter-chip.is-active {
+  background: #de4f1f;
+  border-color: #de4f1f;
+  color: #fff;
+}
+
+.section-title {
+  padding: 18px 0 14px;
+}
+
+.section-title h3 {
+  color: #4c2417;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.replay-grid {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.prototype-card {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  min-height: 188px;
+  border-color: #efc7b5;
+  border-radius: 12px;
+  box-shadow: none;
+  overflow: hidden;
+  background: #fffdfa;
+  cursor: pointer;
+}
+
+.prototype-cover {
+  height: 100%;
+  min-height: 188px;
+  border-right: 1px solid #efc7b5;
+}
+
+.prototype-card-body {
+  padding: 18px;
+}
+
+.prototype-card-body .strong-date {
+  color: #d08d78;
+  font-size: 14px;
+}
+
+.prototype-card-body h4 {
+  margin-top: 6px;
+  color: #5c4c45;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.prototype-card-body .course-summary {
+  margin-top: 12px;
+  color: #bd806d;
+  font-size: 15px;
+}
+
+.prototype-card .tag,
+.detail-info-card .tag {
+  border: 0;
+  background: #fff3ea;
+  color: #b85c38;
+}
+
+.course-detail-page[hidden] {
+  display: none;
+}
+
+.course-detail-page {
+  display: grid;
+  gap: 12px;
+}
+
+.detail-back {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: #8b4d35;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.detail-video-shell {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #310719;
+}
+
+.detail-video,
+.detail-video-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  object-fit: contain;
+  background-color: #310719;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+}
+
+.detail-video-placeholder span {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #78341f;
+  font-size: 12px;
+  text-align: center;
+}
+
+.detail-info-card,
+.detail-review-card {
+  border: 1px solid #efc7b5;
+  border-radius: 10px;
+  background: #fffdfa;
+  padding: 15px;
+  box-shadow: none;
+}
+
+.detail-info-card h3 {
+  color: #2c1710;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.detail-subtitle {
+  margin-top: 8px;
+  color: #7b4a38;
+  font-size: 14px;
+}
+
+.detail-time {
+  margin-top: 7px;
+  color: #bf735a;
+  font-size: 13px;
+}
+
+.detail-section {
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid #efc7b5;
+}
+
+.detail-section h4 {
+  margin: 0 0 10px;
+  color: #9b7665;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.detail-list,
+.scenario-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  color: #2d1710;
+  line-height: 1.9;
+  font-size: 14px;
+}
+
+.detail-list li::before {
+  content: "·";
+  color: #de4f1f;
+  margin-right: 8px;
+}
+
+.scenario-list li::before {
+  content: "✓";
+  color: #cf6637;
+  margin-right: 8px;
+}
+
+.detail-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid #efc7b5;
+}
+
+.detail-download-primary,
+.detail-download-secondary,
+.detail-link-button {
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.detail-download-primary {
+  background: #c9552c;
+}
+
+.detail-download-secondary {
+  background: #bd7b29;
+}
+
+.detail-link-button {
+  background: #6d3a26;
+}
+
+.detail-download-primary:disabled,
+.detail-download-secondary:disabled,
+.detail-link-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.detail-review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.detail-review-head h3 {
+  color: #2c1710;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.detail-review-head h3 span {
+  color: #bd806d;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.detail-review-head strong {
+  color: #c9552c;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.detail-review-head strong span,
+.review-stars {
+  color: #d1822c;
+}
+
+.detail-review-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.review-item {
+  border-bottom: 1px solid #efd6c9;
+  padding-bottom: 12px;
+}
+
+.review-author {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-avatar {
+  width: 30px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e8b894;
+  border-radius: 50%;
+  background: #fff3ea;
+  color: #b85c38;
+  font-size: 13px;
+}
+
+.review-pills {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.review-pills span {
+  border-radius: 6px;
+  background: #fff3ea;
+  color: #b85c38;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.review-comment,
+.empty-review {
+  margin-top: 12px;
+  border-radius: 8px;
+  background: #f7ede6;
+  color: #7a3f2a;
+  padding: 10px 12px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+@media (min-width: 860px) {
+  .app-shell {
+    width: min(calc(100vw - 48px), 720px);
+    min-height: calc(100vh - 24px);
+    border-radius: 0;
+    box-shadow: 0 14px 40px rgba(83, 45, 25, 0.12);
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 8px 16px;
+  }
+
+  .view {
+    padding: 18px 16px 28px;
+  }
+
+  .square-filter {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+
+  .prototype-card {
+    grid-template-columns: 1fr;
+  }
+
+  .prototype-cover {
+    min-height: 148px;
+    border-right: 0;
+    border-bottom: 1px solid #efc7b5;
+  }
+
+  .detail-review-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .review-author {
+    grid-template-columns: 30px 1fr;
+  }
+
+  .review-stars {
+    grid-column: 2;
+  }
+}

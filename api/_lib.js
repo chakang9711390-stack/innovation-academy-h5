@@ -212,11 +212,21 @@ async function ensureSchema() {
       username text not null references users(username) on delete cascade,
       course_id text not null references courses(id) on delete cascade,
       score int not null check (score between 1 and 5),
+      clarity_score int,
+      teacher_score int,
+      difficulty text,
+      completed_setup text,
+      comment text,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now(),
       unique(username, course_id)
     )
   `;
+  await sql`alter table ratings add column if not exists clarity_score int`;
+  await sql`alter table ratings add column if not exists teacher_score int`;
+  await sql`alter table ratings add column if not exists difficulty text`;
+  await sql`alter table ratings add column if not exists completed_setup text`;
+  await sql`alter table ratings add column if not exists comment text`;
   await sql`
     insert into users (username, password_hash, role)
     values (${ADMIN_USERNAME}, ${hashPassword(ADMIN_PASSWORD)}, 'admin')

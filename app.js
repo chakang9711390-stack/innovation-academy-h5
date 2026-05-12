@@ -10,6 +10,7 @@ const state = {
   positionFilter: "全部",
   ratingDraft: {},
   ratings: {},
+  ratingDetails: {},
   watched: new Set(),
   reminders: new Set(),
   courses: [
@@ -346,19 +347,32 @@ function safeDownloadName(course) {
   return (course.handbookFileName || fallback).replace(/[\\/:*?"<>|]+/g, "-");
 }
 
-async function downloadHandbook(course) {
-  const response = await fetch(course.handbookUrl);
-  if (!response.ok) throw new Error("手册下载失败，请稍后重试");
+function safeVideoDownloadName(course) {
+  const fallback = `${course.title || "课程回放"}.mp4`;
+  return (course.replayFileName || fallback).replace(/[\\/:*?"<>|]+/g, "-");
+}
+
+async function downloadBlobFromUrl(url, filename, errorMessage) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(errorMessage);
   const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
+  const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.href = url;
-  link.download = safeDownloadName(course);
+  link.href = objectUrl;
+  link.download = filename;
   link.style.display = "none";
   document.body.appendChild(link);
   link.click();
   link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+async function downloadHandbook(course) {
+  await downloadBlobFromUrl(course.handbookUrl, safeDownloadName(course), "手册下载失败，请稍后重试");
+}
+
+async function downloadReplayVideo(course) {
+  await downloadBlobFromUrl(course.replayUrl, safeVideoDownloadName(course), "视频下载失败，请稍后重试");
 }
 
 function markCourseRecorded(courseId, action) {
@@ -572,11 +586,11 @@ function courseMatchesPosition(course, position) {
 }
 
 function renderCourseCard(course, issueIndex = 0) {
-  const status = getCourseRuntime(course);
   const headline = course.content[0] || course.subtitle;
+  const contentText = course.content.slice(0, 2).join("，");
 
   return `
-    <article class="course-card replay-tile prototype-card ${status === "ended" ? "is-past" : ""}" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
+    <article class="course-card replay-tile prototype-card" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
       <div class="prototype-cover" ${coverStyle(course)}>
         <div class="prototype-cover-copy">
           <span>第${issueIndex}期</span>
@@ -584,7 +598,9 @@ function renderCourseCard(course, issueIndex = 0) {
         </div>
       </div>
       <div class="prototype-card-body">
+        <p class="strong-date">${formatFullTime(course)}</p>
         <h4>${course.title}</h4>
+        <p class="course-summary">${contentText}</p>
         <div class="tag-row">
           ${course.positions.slice(0, 3).map((pos) => `<span class="tag">${pos}</span>`).join("")}
         </div>
@@ -601,42 +617,85 @@ function renderCourseAction(course, status) {
 }
 
 function openCourseDetail(course) {
-  const status = getCourseRuntime(course);
-  $("#courseDetailContent").innerHTML = `
-    <div class="detail-cover" ${coverStyle(course)}></div>
-    <div class="detail-body">
-      <p class="eyebrow">课程详情</p>
+  $("#squareListPanel").hidden = true;
+  $("#courseDetailPage").hidden = false;
+  $("#courseDetailContent").innerHTML = renderCourseDetailPage(course);
+  const video = $("#courseDetailContent video");
+  video?.addEventListener("play", () => markCourseRecorded(course.id, "watch"), { once: true });
+  $("#courseDetailPage").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderCourseDetailPage(course) {
+  const reviews = state.ratingDetails[course.id] || [];
+  const average = reviews.length ? reviews.reduce((sum, item) => sum + Number(item.score || 0), 0) / reviews.length : 0;
+  return `
+    <div class="detail-video-shell">
+      ${course.replayUrl && isVideoUrl(course.replayUrl)
+        ? `<video class="detail-video" src="${course.replayUrl}" controls playsinline poster="${course.coverUrl || ""}"></video>`
+        : `<div class="detail-video-placeholder" ${coverStyle(course)}><span>${course.replayUrl ? "第三方回放链接" : "回放上传中"}</span></div>`}
+    </div>
+    <article class="detail-info-card">
       <h3 id="courseDetailTitle">${course.title}</h3>
-      <p class="meta">${course.subtitle}</p>
-      <p class="meta">${formatFullTime(course)} · ${course.teacher}</p>
+      <p class="detail-subtitle">${course.subtitle}</p>
+      <p class="detail-time">◷ ${formatFullTime(course)}</p>
       <div class="tag-row">
         ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
-        <span class="status ${status}">${statusLabel(status)}</span>
       </div>
-      <div class="content-grid detail-grid">
-        <div class="mini-panel">
-          <b>课程内容</b>
-          <ol>${course.content.map((item) => `<li>${item}</li>`).join("")}</ol>
-        </div>
-        <div class="mini-panel">
-          <b>适用场景</b>
-          <ul>${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
-        </div>
+      <div class="detail-section">
+        <h4>课程内容</h4>
+        <ul class="detail-list">${course.content.map((item) => `<li>${item}</li>`).join("")}</ul>
       </div>
-      <div class="record-actions">${renderCourseAction(course, status)}</div>
-      <div class="review-list">
-        <b>评价详情</b>
-        <p class="meta">${state.ratings[course.id] ? `我的评价：${"★".repeat(state.ratings[course.id])}` : "暂无评价，完成学习后可在学习记录中点评。"}</p>
+      <div class="detail-section">
+        <h4>适用场景</h4>
+        <ul class="scenario-list">${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
       </div>
-    </div>
+      <div class="detail-section">
+        <h4>授课老师</h4>
+        <p class="meta">${course.teacher}</p>
+      </div>
+      <div class="detail-downloads">
+        <button class="detail-download-primary" type="button" data-action="download" data-course="${course.id}" ${course.handbookUrl ? "" : 'disabled title="手册上传中"'}>下载说明书</button>
+        <button class="detail-download-secondary" type="button" data-action="downloadVideo" data-course="${course.id}" ${course.replayUrl ? "" : 'disabled title="视频上传中"'}>下载视频</button>
+        ${course.replayUrl && !isVideoUrl(course.replayUrl) ? `<button class="detail-link-button" type="button" data-action="replay" data-course="${course.id}">打开回放链接</button>` : ""}
+      </div>
+    </article>
+    <article class="detail-review-card">
+      <div class="detail-review-head">
+        <h3>课程评价<span>（${reviews.length}条）</span></h3>
+        <strong>${average ? average.toFixed(1) : "0.0"} <span>★★★★★</span></strong>
+      </div>
+      <div class="detail-review-list">
+        ${reviews.length ? reviews.map(renderCourseReview).join("") : `<p class="empty-review">暂无评价</p>`}
+      </div>
+    </article>
   `;
-  $("#courseDetailSheet").classList.add("is-visible");
-  $("#courseDetailSheet").setAttribute("aria-hidden", "false");
+}
+
+function renderCourseReview(review) {
+  const initial = (review.username || "学").slice(0, 1).toUpperCase();
+  const score = Number(review.score || 0);
+  return `
+    <section class="review-item">
+      <div class="review-author">
+        <span class="review-avatar">${initial}</span>
+        <strong>${review.username}</strong>
+        <span class="review-stars">${"★".repeat(score)}${"☆".repeat(Math.max(0, 5 - score))}</span>
+      </div>
+      <div class="review-pills">
+        ${review.difficulty ? `<span>${review.difficulty}</span>` : ""}
+        ${review.completedSetup ? `<span>${review.completedSetup === "是" ? "安装成功" : review.completedSetup}</span>` : ""}
+      </div>
+      ${review.comment ? `<p class="review-comment">"${review.comment}"</p>` : ""}
+    </section>
+  `;
 }
 
 function closeCourseDetail() {
-  $("#courseDetailSheet")?.classList.remove("is-visible");
-  $("#courseDetailSheet")?.setAttribute("aria-hidden", "true");
+  const detailPage = $("#courseDetailPage");
+  if (!detailPage || detailPage.hidden) return;
+  detailPage.hidden = true;
+  $("#squareListPanel").hidden = false;
+  $("#squareView").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderRecords() {
@@ -763,8 +822,14 @@ async function submitRatingSheet() {
       }),
     });
     state.ratings[courseId] = score;
+    await loadRecords();
     closeRatingSheet();
     renderRecords();
+    const detailPage = $("#courseDetailPage");
+    if (detailPage && !detailPage.hidden) {
+      const course = state.courses.find((item) => item.id === courseId);
+      if (course) $("#courseDetailContent").innerHTML = renderCourseDetailPage(course);
+    }
     showToast("评价已提交");
   } catch (error) {
     showToast(error.message);
@@ -864,6 +929,7 @@ async function loadRecords() {
   state.watched = new Set(data.watched || []);
   state.reminders = new Set(data.reminders || []);
   state.ratings = data.ratings || {};
+  state.ratingDetails = data.ratingDetails || {};
   renderReminderBadge();
 }
 
@@ -1106,6 +1172,25 @@ function bindEvents() {
         showToast(course.handbookUrl ? "手册链接格式异常，请联系管理员" : "手册上传中");
       }
     }
+    if (action === "downloadVideo") {
+      if (course.replayUrl && isValidHttpsUrl(course.replayUrl)) {
+        actionButton.disabled = true;
+        const originalText = actionButton.textContent;
+        actionButton.textContent = "下载中...";
+        try {
+          await downloadReplayVideo(course);
+          markCourseRecorded(course.id, "watch");
+          showToast("课程视频已开始下载");
+        } catch (error) {
+          showToast(error.message);
+        } finally {
+          actionButton.disabled = false;
+          actionButton.textContent = originalText;
+        }
+      } else {
+        showToast(course.replayUrl ? "视频链接格式异常，请联系管理员" : "视频上传中");
+      }
+    }
     if (action === "openRating") {
       openRatingSheet(course);
     }
@@ -1122,10 +1207,7 @@ function bindEvents() {
   $("#ratingSheet").addEventListener("click", (event) => {
     if (event.target.id === "ratingSheet") closeRatingSheet();
   });
-  $("#closeCourseDetail").addEventListener("click", closeCourseDetail);
-  $("#courseDetailSheet").addEventListener("click", (event) => {
-    if (event.target.id === "courseDetailSheet") closeCourseDetail();
-  });
+  $("#backToSquare").addEventListener("click", closeCourseDetail);
   $("#ratingForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     await submitRatingSheet();

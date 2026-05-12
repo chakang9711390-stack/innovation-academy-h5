@@ -14,10 +14,30 @@ module.exports = async function handler(req, res) {
     if (req.method === "GET") {
       const watched = await sql`select course_id, replayed_at, reminded_at, downloaded_at from user_records where username = ${user.username}`;
       const ratings = await sql`select course_id, score from ratings where username = ${user.username}`;
+      const ratingRows = await sql`
+        select course_id, username, score, clarity_score, teacher_score, difficulty, completed_setup, comment, updated_at
+        from ratings
+        order by updated_at desc
+      `;
+      const ratingDetails = {};
+      for (const row of ratingRows) {
+        if (!ratingDetails[row.course_id]) ratingDetails[row.course_id] = [];
+        ratingDetails[row.course_id].push({
+          username: row.username,
+          score: row.score,
+          clarityScore: row.clarity_score,
+          teacherScore: row.teacher_score,
+          difficulty: row.difficulty,
+          completedSetup: row.completed_setup,
+          comment: row.comment,
+          updatedAt: row.updated_at,
+        });
+      }
       json(res, 200, {
         watched: watched.filter((row) => row.replayed_at || row.downloaded_at).map((row) => row.course_id),
         reminders: watched.filter((row) => row.reminded_at).map((row) => row.course_id),
         ratings: Object.fromEntries(ratings.map((row) => [row.course_id, row.score])),
+        ratingDetails,
       });
       return;
     }
@@ -53,14 +73,26 @@ module.exports = async function handler(req, res) {
       }
       if (body.action === "rate") {
         const score = Number(body.score);
+        const clarityScore = Number(body.clarityScore || score);
+        const teacherScore = Number(body.teacherScore || score);
+        const difficulty = String(body.difficulty || "");
+        const completedSetup = String(body.completedSetup || "");
+        const comment = String(body.comment || "").slice(0, 500);
         if (!Number.isInteger(score) || score < 1 || score > 5) {
           json(res, 400, { error: "评分需为 1-5 星" });
           return;
         }
         await sql`
-          insert into ratings (id, username, course_id, score)
-          values (${makeId("s")}, ${user.username}, ${courseId}, ${score})
-          on conflict (username, course_id) do update set score = ${score}, updated_at = now()
+          insert into ratings (id, username, course_id, score, clarity_score, teacher_score, difficulty, completed_setup, comment)
+          values (${makeId("s")}, ${user.username}, ${courseId}, ${score}, ${clarityScore}, ${teacherScore}, ${difficulty}, ${completedSetup}, ${comment})
+          on conflict (username, course_id) do update set
+            score = ${score},
+            clarity_score = ${clarityScore},
+            teacher_score = ${teacherScore},
+            difficulty = ${difficulty},
+            completed_setup = ${completedSetup},
+            comment = ${comment},
+            updated_at = now()
         `;
         json(res, 200, { ok: true });
         return;

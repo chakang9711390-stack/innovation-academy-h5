@@ -69,12 +69,18 @@
       </section>
 
       <section class="view" id="squareView" aria-labelledby="tab-square">
-        <div class="square-filter" id="squarePositionFilter" aria-label="岗位筛选"></div>
-        <div class="section-title">
-          <h3>课程回放</h3>
-          <span id="upcomingCount"></span>
+        <div id="squareListPanel">
+          <div class="square-filter" id="squarePositionFilter" aria-label="岗位筛选"></div>
+          <div class="section-title">
+            <h3>课程回放</h3>
+            <span id="upcomingCount"></span>
+          </div>
+          <div class="course-list replay-grid" id="upcomingCourses"></div>
         </div>
-        <div class="course-list replay-grid" id="upcomingCourses"></div>
+        <div class="course-detail-page" id="courseDetailPage" hidden>
+          <button class="detail-back" id="backToSquare" type="button">← 返回课程广场</button>
+          <div id="courseDetailContent"></div>
+        </div>
       </section>
 
       <section class="view" id="recordsView" aria-labelledby="tab-records">
@@ -174,13 +180,6 @@
           <button class="secondary-button" type="button" id="cancelDeleteCourse">取消</button>
           <button class="danger-button" type="button" id="confirmDeleteCourse">删除</button>
         </div>
-      </div>
-    </div>
-
-    <div class="course-detail-sheet" id="courseDetailSheet" aria-hidden="true">
-      <div class="course-detail-panel" role="dialog" aria-modal="true" aria-labelledby="courseDetailTitle">
-        <button class="icon-button detail-close" id="closeCourseDetail" type="button" aria-label="关闭">×</button>
-        <div id="courseDetailContent"></div>
       </div>
     </div>
 
