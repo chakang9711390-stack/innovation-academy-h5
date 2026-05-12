@@ -1017,11 +1017,11 @@ h1 {
 .admin-action-button,
 .admin-icon-action {
   border: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   background: #7d3d27;
   color: #fff;
-  padding: 7px 9px;
-  font-size: 13px;
+  padding: 6px 7px;
+  font-size: 11px;
   line-height: 1;
   font-weight: 500;
 }
@@ -1049,24 +1049,24 @@ h1 {
 .admin-table-head,
 .admin-course-row {
   display: grid;
-  grid-template-columns: minmax(210px, 1.6fr) 100px 76px 42px 58px 176px;
+  grid-template-columns: minmax(180px, 1fr) 86px 66px 38px 50px 132px;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .admin-table-head {
-  padding: 14px 16px;
+  padding: 11px 14px;
   color: #a7725d;
   background: #fff7ef;
   border-bottom: 1px solid #e5cbb8;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .admin-course-row {
-  padding: 13px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid #e5cbb8;
-  min-height: 104px;
+  min-height: 82px;
 }
 
 .admin-course-row:last-child {
@@ -1074,11 +1074,11 @@ h1 {
 }
 
 .admin-course-main h4 {
-  margin: 0 0 5px;
+  margin: 0 0 4px;
   color: #2d1d15;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 1.38;
+  line-height: 1.32;
   overflow-wrap: anywhere;
 }
 
@@ -1086,7 +1086,13 @@ h1 {
 .admin-cell,
 .admin-mobile-assets {
   color: #b67b6a;
-  font-size: 13px;
+  font-size: 11px;
+}
+
+.admin-cell .status {
+  padding: 4px 7px;
+  font-size: 11px;
+  line-height: 1;
 }
 
 .admin-mobile-assets,
@@ -1101,8 +1107,8 @@ h1 {
 
 .admin-actions {
   display: grid;
-  grid-template-columns: 58px 58px 42px;
-  gap: 6px;
+  grid-template-columns: 40px 40px 36px;
+  gap: 5px;
   min-width: 0;
   align-content: center;
   justify-content: start;
@@ -2036,7 +2042,8 @@ textarea:focus {
   }
 
   #manageView.is-active {
-    max-width: 1120px;
+    width: 100%;
+    max-width: 1180px;
     margin: 0 auto;
   }
 
