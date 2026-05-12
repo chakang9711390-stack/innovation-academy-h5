@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>创新学院 H5 直播课堂</title>
-    <link rel="stylesheet" href="./styles.css?v=20260512-admin" />
+    <link rel="stylesheet" href="./styles.css?v=20260512-admin3" />
   </head>
   <body>
     <section class="auth-screen" id="authScreen">
@@ -117,13 +117,31 @@
           <div class="admin-course-list" id="adminCourseList"></div>
         </div>
 
-        <form class="manage-panel admin-editor-panel" id="courseFormPanel" hidden>
+        <form class="manage-panel admin-editor-panel publish-course-form" id="courseFormPanel" hidden>
           <button class="detail-back" type="button" data-admin-back>← 返回管理</button>
           <h3 id="courseEditorTitle">发布新课程</h3>
           <input id="editingCourseId" type="hidden" />
-          <label>课程标题<input id="courseTitle" maxlength="60" required value="Kubernetes 日志定位与告警实战" /></label>
-          <label>课程形式<input id="courseSubtitle" maxlength="40" required value="带领大家完成告警链路排查" /></label>
-          <label>课程封面链接<input id="coverUrl" type="url" placeholder="https://...（可选，也可在上传视频页上传封面）" /></label>
+          <div class="cover-editor">
+            <span>课程封面图片</span>
+            <div class="cover-preview" id="coverPreview"><span>暂无封面图</span></div>
+            <label class="cover-drop">
+              <input id="publishCoverFile" type="file" accept="image/png,image/jpeg,image/webp,image/*" />
+              <span>点击上传封面图片</span>
+              <small>支持 JPG、PNG，建议尺寸 1280×720，大小 ≤ 5MB</small>
+            </label>
+            <input id="coverUrl" type="hidden" />
+          </div>
+          <label>课程标题<input id="courseTitle" maxlength="60" required placeholder="如：AI培训课堂第7期" value="Kubernetes 日志定位与告警实战" /></label>
+          <label>课程期数副标题<input id="courseSubtitle" maxlength="40" required placeholder="如：在线安装与实操" value="带领大家完成告警链路排查" /></label>
+          <div class="two-col">
+            <label>开课日期<input id="startDate" type="date" required value="2026-05-18" /></label>
+            <label>时间段<input id="timeSlot" inputmode="numeric" required placeholder="21:00-22:00" value="20:00-21:30" /></label>
+          </div>
+          <input id="startAt" type="hidden" value="2026-05-18T20:00" />
+          <input id="endAt" type="hidden" value="2026-05-18T21:30" />
+          <label>课程内容简介<textarea id="contentLines" rows="4" placeholder="课程内容描述...">告警指标定位与日志链路串联
+通过实操建立排障 SOP
+常见误报与降噪策略</textarea></label>
           <div class="field-group">
             <span>适用岗位</span>
             <div class="position-picker">
@@ -134,20 +152,13 @@
               </div>
             </div>
           </div>
-          <div class="two-col">
-            <label>开课时间<input id="startAt" type="datetime-local" required value="2026-05-18T20:00" /></label>
-            <label>结束时间<input id="endAt" type="datetime-local" required value="2026-05-18T21:30" /></label>
-          </div>
-          <label>课程内容<textarea id="contentLines" rows="4">告警指标定位与日志链路串联
-通过实操建立排障 SOP
-常见误报与降噪策略</textarea></label>
-          <label>适用场景<textarea id="scenarioLines" rows="4">告警频繁但定位慢
+          <label>Lark 会议链接（选填）<input id="liveUrl" type="url" placeholder="https://meeting.larksuite.com/..." value="https://example.com/live/k8s-log" /></label>
+          <label>授课老师<input id="teacherName" required placeholder="如：深圳分公司团队 · Ben" value="创新学院-Rae" /></label>
+          <label>适用场景（每行一条）<textarea id="scenarioLines" rows="4" placeholder="每行一条">告警频繁但定位慢
 多团队协作排障
 线上变更后快速回滚判断</textarea></label>
-          <label>授课老师<input id="teacherName" required value="创新学院-Rae" /></label>
-          <label>直播间链接<input id="liveUrl" type="url" placeholder="https://..." value="https://example.com/live/k8s-log" /></label>
           <div class="form-actions">
-            <button class="secondary-button" type="button" id="saveDraft">保存草稿</button>
+            <button class="secondary-button" type="button" id="saveDraft">取消</button>
             <button class="secondary-button" type="button" id="cancelEdit">取消编辑</button>
             <button class="primary-button" type="submit" id="publishButton">发布</button>
           </div>
@@ -255,6 +266,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=20260512-admin"></script>
+    <script src="./app.js?v=20260512-admin3"></script>
   </body>
 </html>

@@ -1020,7 +1020,8 @@ h1 {
   border-radius: 7px;
   background: #7d3d27;
   color: #fff;
-  padding: 8px 12px;
+  padding: 7px 10px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -1040,16 +1041,16 @@ h1 {
 .admin-table {
   border: 1px solid #e5cbb8;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   background: #fff;
 }
 
 .admin-table-head,
 .admin-course-row {
   display: grid;
-  grid-template-columns: minmax(180px, 1.45fr) 92px 76px 50px 70px minmax(190px, 1.55fr);
+  grid-template-columns: minmax(220px, 1.4fr) 104px 86px 54px 72px minmax(260px, 1.2fr);
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .admin-table-head {
@@ -1099,6 +1100,130 @@ h1 {
   display: flex;
   gap: 7px;
   flex-wrap: wrap;
+  min-width: 0;
+}
+
+.publish-course-form {
+  border: 1px solid #e5cbb8;
+  border-radius: 12px;
+  background: #fffaf4;
+}
+
+.publish-course-form > h3 {
+  color: #2d1d15;
+  font-size: 18px;
+}
+
+.publish-course-form label,
+.publish-course-form .field-group {
+  color: #7b4b38;
+  font-weight: 500;
+}
+
+.publish-course-form input,
+.publish-course-form textarea {
+  border-color: #2f302d;
+  border-radius: 6px;
+  background: #2f302d;
+  color: #fff8ef;
+}
+
+.publish-course-form input::placeholder,
+.publish-course-form textarea::placeholder {
+  color: #8f8b85;
+}
+
+.cover-editor {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e6c6b1;
+  color: #7b4b38;
+  font-weight: 500;
+}
+
+.cover-preview {
+  display: grid;
+  place-items: center;
+  min-height: 142px;
+  border: 1px solid #e6c6b1;
+  border-radius: 8px;
+  background-color: #f5ece5;
+  background-position: center;
+  background-size: cover;
+  color: #c7a997;
+}
+
+.cover-preview.has-image {
+  min-height: 220px;
+}
+
+.cover-drop {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 7px;
+  padding: 18px;
+  border: 1px dashed #dfb99f;
+  border-radius: 8px;
+  background: #fbf1e9;
+  text-align: center;
+  color: #c7542c;
+}
+
+.cover-drop input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.cover-drop small {
+  color: #b9816d;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.publish-course-form .check-chip span {
+  border-color: #e0bfa9;
+  border-radius: 6px;
+  background: #fff3e8;
+  color: #7d3d27;
+}
+
+.publish-course-form .check-chip input:checked + span {
+  background: #c7542c;
+  border-color: #c7542c;
+  color: #fff;
+  box-shadow: none;
+}
+
+.publish-course-form .more-positions {
+  border-color: #e0bfa9;
+  border-radius: 6px;
+  background: #fff3e8;
+  color: #7d3d27;
+}
+
+.publish-course-form .form-actions {
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid #e6c6b1;
+}
+
+.publish-course-form .form-actions .primary-button {
+  flex: 0 0 auto;
+  border-radius: 7px;
+  background: #c7542c;
+  padding-inline: 18px;
+}
+
+.publish-course-form .form-actions .secondary-button {
+  flex: 0 0 auto;
+  border-color: #7d3d27;
+  background: #7d3d27;
+  color: #fff;
 }
 
 .admin-review-summary,
@@ -1883,7 +2008,7 @@ textarea:focus {
   }
 
   #manageView.is-active {
-    max-width: 920px;
+    max-width: 1120px;
     margin: 0 auto;
   }
 

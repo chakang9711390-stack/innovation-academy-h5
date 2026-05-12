@@ -860,8 +860,8 @@ function renderRecordCard(course) {
 }
 
 function renderPositionChecks() {
-  const mainPositions = POSITION_OPTIONS.slice(0, 5);
-  const morePositions = POSITION_OPTIONS.slice(5);
+  const mainPositions = ["运维", "研发", "测试", "产品"];
+  const morePositions = POSITION_OPTIONS.filter((position) => !mainPositions.includes(position));
   $("#positionChecks").innerHTML = mainPositions
     .map((pos, index) => renderPositionChip(pos, index < 2))
     .join("");
@@ -1266,6 +1266,7 @@ async function loadAppData() {
 }
 
 function getCoursePayload(published) {
+  syncCourseDateFields();
   const startAt = $("#startAt").value;
   const endAt = $("#endAt").value;
   if (new Date(endAt) <= new Date(startAt)) {
@@ -1306,6 +1307,7 @@ function resetCourseForm() {
   $("#courseTitle").value = "";
   $("#courseSubtitle").value = "";
   $("#coverUrl").value = "";
+  $("#publishCoverFile").value = "";
   $$("#positionChecks input").forEach((input, index) => {
     input.checked = index < 2;
   });
@@ -1313,14 +1315,16 @@ function resetCourseForm() {
     input.checked = false;
   });
   setMorePositionsVisible(false);
-  $("#startAt").value = "2026-05-18T20:00";
-  $("#endAt").value = "2026-05-18T21:30";
+  $("#startDate").value = "2026-05-18";
+  $("#timeSlot").value = "20:00-21:30";
+  syncCourseDateFields();
   $("#contentLines").value = "";
   $("#scenarioLines").value = "";
   $("#teacherName").value = "";
   $("#liveUrl").value = "";
   $("#publishButton").textContent = "发布";
   $("#cancelEdit").classList.remove("is-visible");
+  updateCoverPreview();
 }
 
 function fillCourseForm(course) {
@@ -1328,30 +1332,80 @@ function fillCourseForm(course) {
   $("#courseTitle").value = course.title;
   $("#courseSubtitle").value = course.subtitle;
   $("#coverUrl").value = course.coverUrl || "";
+  $("#publishCoverFile").value = "";
   $$("#positionChecks input, #morePositionChecks input").forEach((input) => {
     input.checked = course.positions.includes(input.value);
   });
   setMorePositionsVisible(false);
-  $("#startAt").value = course.startAt.slice(0, 16);
-  $("#endAt").value = course.endAt.slice(0, 16);
+  $("#startDate").value = course.startAt.slice(0, 10);
+  $("#timeSlot").value = `${course.startAt.slice(11, 16)}-${course.endAt.slice(11, 16)}`;
+  syncCourseDateFields();
   $("#contentLines").value = course.content.join("\n");
   $("#scenarioLines").value = course.scenarios.join("\n");
   $("#teacherName").value = course.teacher;
   $("#liveUrl").value = course.liveUrl || "";
   $("#publishButton").textContent = "保存修改";
   $("#cancelEdit").classList.add("is-visible");
+  updateCoverPreview();
+}
+
+function syncCourseDateFields() {
+  const date = $("#startDate")?.value || "2026-05-18";
+  const slot = ($("#timeSlot")?.value || "20:00-21:30").replace("—", "-").replace("–", "-");
+  const [start = "20:00", end = "21:30"] = slot.split("-").map((item) => item.trim());
+  $("#startAt").value = `${date}T${start}`;
+  $("#endAt").value = `${date}T${end}`;
+}
+
+function updateCoverPreview() {
+  const preview = $("#coverPreview");
+  const file = $("#publishCoverFile")?.files?.[0];
+  const url = ($("#coverUrl")?.value || "").trim();
+  if (!preview) return;
+  if (file) {
+    preview.style.backgroundImage = `url("${URL.createObjectURL(file)}")`;
+    preview.classList.add("has-image");
+    preview.innerHTML = "";
+    return;
+  }
+  if (!url) {
+    preview.style.backgroundImage = "";
+    preview.classList.remove("has-image");
+    preview.innerHTML = "<span>暂无封面图</span>";
+    return;
+  }
+  preview.style.backgroundImage = `url("${url.replace(/"/g, "")}")`;
+  preview.classList.add("has-image");
+  preview.innerHTML = "";
 }
 
 async function addCourse(published) {
   const payload = getCoursePayload(published);
   if (!payload) return;
   const editingCourseId = $("#editingCourseId").value;
+  const publishCoverFile = $("#publishCoverFile").files[0];
+  if (publishCoverFile && !publishCoverFile.type.startsWith("image/")) {
+    showToast("课程封面需为图片格式");
+    return;
+  }
   setCourseFormSubmitting(true);
   try {
-    const data = await apiFetch("/api/courses", {
+    let data = await apiFetch("/api/courses", {
       method: editingCourseId ? "PUT" : "POST",
       body: JSON.stringify(editingCourseId ? { ...payload, courseId: editingCourseId } : payload),
     });
+    if (publishCoverFile) {
+      setUploadProgress(true, 0, "正在上传封面...");
+      const coverAsset = await uploadAssetFile(data.course, "cover", publishCoverFile, (loaded) => {
+        const percent = publishCoverFile.size ? (loaded / publishCoverFile.size) * 100 : 0;
+        setUploadProgress(true, percent, `封面上传 ${Math.round(percent)}%`);
+      });
+      data = await apiFetch("/api/courses", {
+        method: "PUT",
+        body: JSON.stringify({ mode: "assets", courseId: data.course.id, coverAsset }),
+      });
+      setUploadProgress(false);
+    }
     if (editingCourseId) {
       const index = state.courses.findIndex((item) => item.id === editingCourseId);
       state.courses[index] = data.course;
@@ -1579,7 +1633,15 @@ function bindEvents() {
     addCourse(true);
   });
 
-  $("#saveDraft").addEventListener("click", () => addCourse(false));
+  $("#saveDraft").addEventListener("click", () => {
+    resetCourseForm();
+    showAdminPanel("adminListPanel");
+  });
+
+  $("#coverUrl").addEventListener("input", updateCoverPreview);
+  $("#publishCoverFile").addEventListener("change", updateCoverPreview);
+  $("#startDate").addEventListener("change", syncCourseDateFields);
+  $("#timeSlot").addEventListener("input", syncCourseDateFields);
 
   $("#toggleMorePositions").addEventListener("click", () => {
     setMorePositionsVisible($("#morePositionChecks").hidden);
