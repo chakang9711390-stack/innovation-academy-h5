@@ -658,12 +658,13 @@ h1 {
 }
 
 .replay-tile {
-  padding: 14px 16px;
+  padding: 0;
   overflow: hidden;
   cursor: pointer;
   border-color: #f0c7b4;
   background: #fffdf9;
   box-shadow: none;
+  border-radius: 8px;
 }
 
 .course-cover {
@@ -686,14 +687,58 @@ h1 {
 
 .replay-grid {
   display: grid;
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.replay-row {
-  display: grid;
-  grid-template-columns: 112px 1fr 20px;
-  gap: 14px;
-  align-items: center;
+.prototype-card {
+  display: block;
+}
+
+.prototype-cover {
+  height: 118px;
+  display: flex;
+  align-items: flex-end;
+  background-size: cover;
+  background-position: center;
+  background-color: #263b62;
+}
+
+.prototype-cover-copy {
+  width: 100%;
+  padding: 0 10px 10px;
+  color: #fff;
+}
+
+.prototype-cover-copy span {
+  display: block;
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: #c6532b;
+  padding: 4px 7px;
+  font-size: 12px;
+  line-height: 1.1;
+  font-weight: 500;
+}
+
+.prototype-cover-copy strong {
+  display: block;
+  width: 100%;
+  background: rgba(8, 16, 24, 0.88);
+  padding: 7px;
+  font-size: 13px;
+  line-height: 1.25;
+  color: #fff;
+}
+
+.prototype-card-body {
+  padding: 12px 10px 14px;
+}
+
+.prototype-card-body h4 {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #2d1710;
 }
 
 .course-summary {
@@ -1584,11 +1629,16 @@ textarea:focus {
 
   .replay-grid {
     display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .course-card {
+  .course-card:not(.prototype-card) {
     display: flex;
     flex-direction: column;
+  }
+
+  .prototype-card {
+    display: block;
   }
 
   .course-card .record-actions {
@@ -1728,6 +1778,7 @@ textarea:focus {
 
   .replay-grid {
     display: grid;
+    grid-template-columns: 1fr;
   }
 
   .replay-row {

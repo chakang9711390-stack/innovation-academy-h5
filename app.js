@@ -550,38 +550,45 @@ function renderEventCard(course) {
 
 function renderCourses() {
   renderSquarePositionFilter();
-  const published = state.courses.filter((course) => course.published && getCourseRuntime(course) === "ended" && (state.positionFilter === "全部" || course.positions.includes(state.positionFilter)));
+  const published = state.courses.filter((course) => course.published && getCourseRuntime(course) === "ended" && courseMatchesPosition(course, state.positionFilter));
   const replayCourses = published.sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
   $("#upcomingCount").textContent = `${replayCourses.length} 门`;
-  $("#upcomingCourses").innerHTML = replayCourses.length ? replayCourses.map(renderCourseCard).join("") : `<div class="empty-state">暂无课程回放</div>`;
+  $("#upcomingCourses").innerHTML = replayCourses.length ? replayCourses.map((course, index) => renderCourseCard(course, replayCourses.length - index - 1)).join("") : `<div class="empty-state">暂无课程回放</div>`;
 }
 
 function renderSquarePositionFilter() {
-  const options = ["全部", ...POSITION_OPTIONS];
+  const options = ["全部", "研发", "产品", "运营", "财务", "数据", "HR"];
   $("#squarePositionFilter").innerHTML = options
     .map((position) => `<button class="filter-chip ${state.positionFilter === position ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`)
     .join("");
 }
 
-function renderCourseCard(course) {
+function courseMatchesPosition(course, position) {
+  if (position === "全部") return true;
+  if (position === "数据") return course.positions.some((item) => item.includes("数据") || item.includes("算法"));
+  if (position === "研发") return course.positions.some((item) => item.includes("研发") || item.includes("算法") || item.includes("测试") || item.includes("运维"));
+  return course.positions.some((item) => item.includes(position));
+}
+
+function renderCourseCard(course, issueIndex = 0) {
   const status = getCourseRuntime(course);
+  const headline = course.content[0] || course.subtitle;
 
   return `
-    <article class="course-card replay-tile replay-row ${status === "ended" ? "is-past" : ""}" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
-      <span class="course-thumb" ${coverStyle(course)}></span>
-      <div class="course-head">
-        <div>
-          <p class="meta strong-date">${formatFullTime(course)}</p>
-          <h4>${course.title}</h4>
-          <p class="meta">${course.subtitle}</p>
-          <p class="course-summary">${course.content.slice(0, 2).join("，")}</p>
-          <div class="tag-row">
-            ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
-          </div>
+    <article class="course-card replay-tile prototype-card ${status === "ended" ? "is-past" : ""}" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
+      <div class="prototype-cover" ${coverStyle(course)}>
+        <div class="prototype-cover-copy">
+          <span>第${issueIndex}期</span>
+          <strong>${headline}</strong>
         </div>
       </div>
-      <span class="row-arrow">›</span>
+      <div class="prototype-card-body">
+        <h4>${course.title}</h4>
+        <div class="tag-row">
+          ${course.positions.slice(0, 3).map((pos) => `<span class="tag">${pos}</span>`).join("")}
+        </div>
+      </div>
     </article>
   `;
 }
