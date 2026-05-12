@@ -493,8 +493,8 @@ function renderCalendar() {
 
 function renderEventList() {
   renderCalendarFilters();
-  const events = monthEvents()
-    .filter((course) => !state.selectedDate || course.startAt.startsWith(state.selectedDate))
+  const events = state.courses
+    .filter((course) => course.published)
     .filter((course) => {
       if (state.calendarFilter === "reserved") return state.reminders.has(course.id);
       if (state.calendarFilter === "unreserved") return !state.reminders.has(course.id);
@@ -502,12 +502,11 @@ function renderEventList() {
     })
     .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
-  const monthName = state.month.toLocaleDateString("zh-CN", { month: "long" });
-  $("#calendarListTitle").textContent = state.selectedDate ? `${Number(state.selectedDate.slice(8, 10))}日直播安排` : `${monthName}直播安排`;
-  $("#clearDay").style.visibility = state.selectedDate ? "visible" : "hidden";
+  $("#calendarListTitle").textContent = "直播日历";
+  $("#clearDay").style.display = "none";
 
   if (!events.length) {
-    $("#eventList").innerHTML = `<div class="empty-state">${state.selectedDate ? "当天暂无直播安排" : "本月暂无直播安排"}</div>`;
+    $("#eventList").innerHTML = `<div class="empty-state">暂无直播安排</div>`;
     return;
   }
 
@@ -522,31 +521,29 @@ function renderCalendarFilters() {
 
 function renderEventCard(course) {
   const start = parseDate(course.startAt);
-  const day = String(start.getDate()).padStart(2, "0");
-  const mon = start.toLocaleString("en", { month: "short" }).toUpperCase();
   const status = getCourseRuntime(course);
   const reminded = state.reminders.has(course.id);
   return `
-    <article class="event-card ${status === "ended" ? "is-ended" : ""}" data-course="${course.id}">
-      <span class="date-block"><span><strong>${day}</strong><br />${mon}</span></span>
+    <article class="event-card timeline-course ${status === "ended" ? "is-ended" : ""}" data-course="${course.id}">
+      <span class="timeline-dot" aria-hidden="true"></span>
+      <span class="course-thumb" ${coverStyle(course)}></span>
       <span class="event-body">
+        <p class="meta strong-date">${formatFullTime(course)}</p>
         <h4>${course.title}</h4>
-        <p class="meta">${formatTimeRange(course)} · ${course.teacher}</p>
+        <p class="course-subtitle">${course.subtitle}</p>
         <span class="tag-row">
           ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
-          <span class="tag form">${course.form}</span>
           <span class="status ${status}">${statusLabel(status)}</span>
         </span>
         <span class="event-flat">
           ${course.content.map((item) => `<b>${item}</b>`).join("")}
-          ${course.scenarios.map((item) => `<i>${item}</i>`).join("")}
         </span>
         <span class="event-card-actions">
-          ${status === "ended" ? "" : `<button class="secondary-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>`}
           ${course.liveUrl ? `<a class="inline-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">会议链接</a>` : ""}
           ${reminded ? `<em>提前1天 · 提前1小时提醒</em>` : ""}
         </span>
       </span>
+      ${status === "ended" ? "" : `<button class="primary-button reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>`}
     </article>
   `;
 }
@@ -569,29 +566,22 @@ function renderSquarePositionFilter() {
 
 function renderCourseCard(course) {
   const status = getCourseRuntime(course);
-  const initial = course.teacher.split("-").pop().slice(0, 1).toUpperCase();
 
   return `
-    <article class="course-card replay-tile ${status === "ended" ? "is-past" : ""}" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
-      <div class="course-cover" ${coverStyle(course)}>
-        <span>${formatFullTime(course).split("（")[0]}</span>
-      </div>
+    <article class="course-card replay-tile replay-row ${status === "ended" ? "is-past" : ""}" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
+      <span class="course-thumb" ${coverStyle(course)}></span>
       <div class="course-head">
         <div>
+          <p class="meta strong-date">${formatFullTime(course)}</p>
           <h4>${course.title}</h4>
-          <p class="meta">${formatFullTime(course)}</p>
           <p class="meta">${course.subtitle}</p>
           <p class="course-summary">${course.content.slice(0, 2).join("，")}</p>
+          <div class="tag-row">
+            ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
+          </div>
         </div>
-        <span class="avatar">${initial}</span>
       </div>
-      <div class="tag-row">
-        ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
-      </div>
-      <div class="course-link-row">
-        <span>${course.replayUrl ? "可在线播放" : "回放上传中"}</span>
-        <span>查看详情</span>
-      </div>
+      <span class="row-arrow">›</span>
     </article>
   `;
 }
