@@ -972,13 +972,15 @@ h1 {
 }
 
 .manage-panel {
-  display: none;
+  display: grid;
+  gap: 14px;
   padding: 20px;
 }
 
-.manage-panel.is-active {
-  display: grid;
-  gap: 14px;
+.manage-panel[hidden],
+#adminListPanel[hidden],
+.admin-editor-panel[hidden] {
+  display: none !important;
 }
 
 #cancelEdit {
@@ -993,34 +995,264 @@ h1 {
   padding: 0;
 }
 
-.admin-course-list {
-  display: grid;
-  gap: 12px;
+.admin-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
-.admin-course-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 16px;
-  align-items: center;
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
+.admin-page-head h3 {
+  font-size: 18px;
+  color: #2d1d15;
+}
+
+.admin-page-head span {
+  color: #9c7a68;
+  font-size: 14px;
+}
+
+.admin-publish-button,
+.admin-action-button,
+.admin-icon-action {
+  border: 0;
+  border-radius: 7px;
+  background: #7d3d27;
+  color: #fff;
+  padding: 8px 12px;
+  font-weight: 500;
+}
+
+.admin-publish-button {
+  background: #c7542c;
+  padding: 10px 18px;
+}
+
+.admin-action-button.is-accent {
+  background: #af4e28;
+}
+
+.admin-icon-action.is-danger {
+  background: #8b2522;
+}
+
+.admin-table {
+  border: 1px solid #e5cbb8;
+  border-radius: 12px;
+  overflow: hidden;
   background: #fff;
 }
 
-.admin-course-card h4 {
-  margin: 0;
-  color: #19323d;
-  font-size: 20px;
+.admin-table-head,
+.admin-course-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.45fr) 92px 76px 50px 70px minmax(190px, 1.55fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-table-head {
+  padding: 14px 16px;
+  color: #a7725d;
+  background: #fff7ef;
+  border-bottom: 1px solid #e5cbb8;
+  font-size: 14px;
   font-weight: 500;
+}
+
+.admin-course-row {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5cbb8;
+}
+
+.admin-course-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-course-main h4 {
+  margin: 0 0 5px;
+  color: #2d1d15;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.admin-course-main p,
+.admin-cell,
+.admin-mobile-assets {
+  color: #b67b6a;
+  font-size: 14px;
+}
+
+.admin-mobile-assets,
+.admin-mobile-tags {
+  display: none;
+}
+
+.asset-mark {
+  color: #c7542c;
+  font-weight: 600;
 }
 
 .admin-actions {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+}
+
+.admin-review-summary,
+.admin-review-item {
+  border: 1px solid #e5cbb8;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.admin-review-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-review-item div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #c58a3a;
+}
+
+.admin-review-item p {
+  margin-top: 8px;
+  color: #7f6b61;
+}
+
+.admin-review-item blockquote {
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8eee6;
+  color: #7d3d27;
+}
+
+.message-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.message-drawer.is-visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.message-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 25, 21, 0.38);
+}
+
+.message-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(360px, 100vw);
+  height: 100%;
+  background: #fff;
+  box-shadow: -20px 0 50px rgba(38, 29, 22, 0.2);
+  transform: translateX(100%);
+  transition: transform 0.22s ease;
+}
+
+.message-drawer.is-visible .message-panel {
+  transform: translateX(0);
+}
+
+.message-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  color: #fff;
+  background: #c7542c;
+}
+
+.message-head h3 {
+  flex: 1;
+  font-size: 16px;
+}
+
+.message-read-all,
+.message-close {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  padding: 6px 9px;
+}
+
+.message-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.message-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px 1fr 8px;
+  gap: 12px;
+  padding: 18px;
+  border-bottom: 1px solid #efe1d7;
+}
+
+.message-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff0ef;
+  color: #c7542c;
+  font-weight: 700;
+}
+
+.message-icon.play,
+.message-icon.spark,
+.message-icon.star {
+  background: #fff4d9;
+  color: #b87523;
+}
+
+.message-item h4 {
+  margin: 0 0 4px;
+  color: #b94b2b;
+  font-size: 14px;
+}
+
+.message-item p {
+  color: #6f4c3f;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.message-item small {
+  display: block;
+  margin-top: 6px;
+  color: #b09080;
+}
+
+.message-item i {
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: #c7542c;
 }
 
 label,
@@ -1820,12 +2052,98 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .admin-course-card {
-    grid-template-columns: 1fr;
+  #manageView.is-active {
+    margin-inline: -16px;
+    padding: 24px 20px;
+    background: #1c1b18;
+  }
+
+  #manageView.is-active .admin-page-head h3 {
+    color: #f3ded0;
+  }
+
+  .admin-publish-button {
+    border-radius: 8px;
+    padding: 10px 15px;
+  }
+
+  .admin-table {
+    display: grid;
+    gap: 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .admin-table-head {
+    display: none;
+  }
+
+  .admin-course-row {
+    display: block;
+    padding: 14px;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .admin-course-main {
+    padding-right: 86px;
+  }
+
+  .admin-course-main h4 {
+    font-size: 15px;
+  }
+
+  .admin-course-main p {
+    font-size: 13px;
+  }
+
+  .admin-course-row .status {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+  }
+
+  .admin-course-row {
+    position: relative;
+  }
+
+  .admin-cell[data-label="日期"],
+  .admin-cell[data-label="状态"],
+  .admin-cell.asset-mark {
+    display: none;
+  }
+
+  .admin-mobile-assets {
+    display: block;
+    margin-top: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5cbb8;
+    color: #b67b6a;
+  }
+
+  .admin-mobile-tags {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: -34px;
+    min-height: 28px;
   }
 
   .admin-actions {
     justify-content: flex-start;
+    margin-top: 10px;
+  }
+
+  .admin-action-button,
+  .admin-icon-action {
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+
+  .message-panel {
+    width: 100vw;
   }
 
   .stats-grid {

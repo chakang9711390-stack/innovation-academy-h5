@@ -14,6 +14,7 @@ const state = {
   ratingDetails: {},
   watched: new Set(),
   reminders: new Set(),
+  messagesRead: false,
   courses: [
     {
       id: "c1",
@@ -474,12 +475,98 @@ function switchTab(tab) {
   renderTabs();
   if (tab === "square") renderCourses();
   if (tab === "records") renderRecords();
-  if (tab === "manage") renderAssetOptions();
+  if (tab === "manage") {
+    showAdminPanel("adminListPanel", false);
+    renderAdminCourseList();
+    renderAssetOptions();
+  }
 }
 
 function renderReminderBadge() {
   const badge = $("#reminderBadge b");
-  if (badge) badge.textContent = state.reminders.size;
+  if (badge) badge.textContent = state.messagesRead ? "0" : buildMessages().length;
+}
+
+function buildMessages() {
+  const published = state.courses.filter((course) => course.published);
+  const upcoming = published
+    .filter((course) => getCourseRuntime(course) === "upcoming")
+    .sort((a, b) => parseDate(a.startAt) - parseDate(b.startAt));
+  const ended = published
+    .filter((course) => getCourseRuntime(course) === "ended")
+    .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
+  const messages = [];
+
+  upcoming.slice(0, 2).forEach((course, index) => {
+    messages.push({
+      tone: "alarm",
+      icon: "!",
+      title: `${course.title} — 开播提醒`,
+      body: `课程将于 ${formatFullTime(course)} 开播，请提前加入直播间`,
+      time: index === 0 ? "1小时前" : "提前1天通知",
+    });
+  });
+
+  ended.filter((course) => course.replayUrl).slice(0, 1).forEach((course) => {
+    messages.push({
+      tone: "play",
+      icon: ">",
+      title: `${course.title}回放已上传`,
+      body: "课程回放已可观看，可前往课程广场查看",
+      time: "昨天18:30",
+    });
+  });
+
+  upcoming.slice(0, 1).forEach((course) => {
+    messages.push({
+      tone: "spark",
+      icon: "+",
+      title: `新课程已发布：${course.title}`,
+      body: "新课程已发布，现可预约报名，名额有限",
+      time: "2天前",
+    });
+  });
+
+  ended.slice(0, 1).forEach((course) => {
+    messages.push({
+      tone: "star",
+      icon: "*",
+      title: "评分表已开放 — 请完成评价",
+      body: `${course.title}课程评分表已开放，请对讲师进行评价`,
+      time: "3天前",
+    });
+  });
+
+  return messages;
+}
+
+function renderMessages() {
+  const messages = buildMessages();
+  $("#messageList").innerHTML = messages.length
+    ? messages.map((message) => `
+      <article class="message-item">
+        <span class="message-icon ${message.tone}">${message.icon}</span>
+        <div>
+          <h4>${message.title}</h4>
+          <p>${message.body}</p>
+          <small>${message.time}</small>
+        </div>
+        <i></i>
+      </article>
+    `).join("")
+    : `<div class="empty-state">暂无消息通知</div>`;
+  renderReminderBadge();
+}
+
+function openMessageDrawer() {
+  renderMessages();
+  $("#messageDrawer").classList.add("is-visible");
+  $("#messageDrawer").setAttribute("aria-hidden", "false");
+}
+
+function closeMessageDrawer() {
+  $("#messageDrawer").classList.remove("is-visible");
+  $("#messageDrawer").setAttribute("aria-hidden", "true");
 }
 
 function renderCalendar() {
@@ -1055,26 +1142,80 @@ function renderAdminCourseList() {
     .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
   $("#publishedManageCount").textContent = `${published.length} 门`;
   $("#adminCourseList").innerHTML = published.length
-    ? published.map(renderAdminCourseItem).join("")
+    ? `
+      <div class="admin-table">
+        <div class="admin-table-head">
+          <span>课程</span>
+          <span>日期</span>
+          <span>状态</span>
+          <span>回放</span>
+          <span>说明书</span>
+          <span>操作</span>
+        </div>
+        ${published.map(renderAdminCourseItem).join("")}
+      </div>
+    `
     : `<div class="empty-state">暂无已发布课程</div>`;
+  renderReminderBadge();
 }
 
 function renderAdminCourseItem(course) {
+  const runtime = getCourseRuntime(course);
+  const date = course.startAt.slice(0, 10);
+  const replayMark = course.replayUrl ? "✓" : "—";
+  const handbookMark = course.handbookUrl ? "✓" : "—";
   return `
-    <article class="admin-course-card">
-      <div>
+    <article class="admin-course-row">
+      <div class="admin-course-main" data-label="课程">
         <h4>${course.title}</h4>
-        <p class="meta">${formatFullTime(course)} · ${course.teacher}</p>
-        <div class="tag-row">
-          ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
-          <span class="status ${getCourseRuntime(course)}">${statusLabel(getCourseRuntime(course))}</span>
-        </div>
+        <p>${course.teacher}</p>
+        <div class="admin-mobile-assets">封面 ${course.coverUrl ? "✓" : "—"} · 回放 ${replayMark} · 说明书 ${handbookMark}</div>
       </div>
-      <div class="admin-actions">
-        <button class="secondary-button" type="button" data-admin-action="edit" data-course="${course.id}">编辑</button>
-        <button class="danger-button" type="button" data-admin-action="delete" data-course="${course.id}">删除</button>
+      <div class="admin-cell" data-label="日期">${date}</div>
+      <div class="admin-cell" data-label="状态"><span class="status ${runtime}">${statusLabel(runtime)}</span></div>
+      <div class="admin-cell asset-mark" data-label="回放">${replayMark}</div>
+      <div class="admin-cell asset-mark" data-label="说明书">${handbookMark}</div>
+      <div class="admin-actions" data-label="操作">
+        <button class="admin-action-button" type="button" data-admin-action="upload" data-course="${course.id}">上传</button>
+        <button class="admin-action-button is-accent" type="button" data-admin-action="message" data-course="${course.id}">提醒消息</button>
+        <button class="admin-action-button" type="button" data-admin-action="reviews" data-course="${course.id}">评价</button>
+        <button class="admin-icon-action" type="button" data-admin-action="edit" data-course="${course.id}" aria-label="编辑">编辑</button>
+        <button class="admin-icon-action is-danger" type="button" data-admin-action="delete" data-course="${course.id}" aria-label="删除">删除</button>
       </div>
+      <div class="admin-mobile-tags">${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}</div>
     </article>
+  `;
+}
+
+function showAdminPanel(panelId, shouldScroll = true) {
+  ["adminListPanel", "courseFormPanel", "assetFormPanel", "adminReviewPanel"].forEach((id) => {
+    const panel = $(`#${id}`);
+    if (panel) panel.hidden = id !== panelId;
+  });
+  if (shouldScroll) $("#manageView").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderAdminReviewPanel(course) {
+  const reviews = state.ratingDetails[course.id] || [];
+  const average = reviews.length ? (reviews.reduce((sum, item) => sum + Number(item.score || 0), 0) / reviews.length).toFixed(1) : "暂无";
+  $("#adminReviewContent").innerHTML = `
+    <article class="admin-review-summary">
+      <h4>${course.title}</h4>
+      <p>${reviews.length} 条评价 · 平均分 ${average}</p>
+    </article>
+    <div class="admin-review-list">
+      ${reviews.length ? reviews.map((review) => `
+        <article class="admin-review-item">
+          <div>
+            <strong>${review.username || "学员"}</strong>
+            <span>${"★".repeat(Number(review.score || 0))}${"☆".repeat(5 - Number(review.score || 0))}</span>
+          </div>
+          <p>讲解清晰：${review.clarityScore || "-"} 分 · 老师评价：${review.teacherScore || "-"} 分</p>
+          <p>难度：${review.difficulty || "-"} · 完成安装：${review.completedSetup || "-"}</p>
+          ${review.comment ? `<blockquote>${review.comment}</blockquote>` : ""}
+        </article>
+      `).join("") : `<div class="empty-state">暂无学员评价</div>`}
+    </div>
   `;
 }
 
@@ -1222,6 +1363,9 @@ async function addCourse(published) {
     renderAssetOptions();
     renderAdminCourseList();
     resetCourseForm();
+    showAdminPanel("adminListPanel");
+    state.messagesRead = false;
+    renderReminderBadge();
     showToast(editingCourseId ? "课程已更新" : published ? "已发布，学员端实时可见" : "草稿已保存");
   } catch (error) {
     showToast(error.message);
@@ -1410,15 +1554,24 @@ function bindEvents() {
     await submitPageRating();
   });
 
-  $$("#manageView .subtab").forEach((button) => {
-    button.addEventListener("click", () => {
-      const panel = $(`#${button.dataset.panel}`);
-      if (!panel) return;
-      $$("#manageView .subtab, .manage-panel").forEach((item) => item.classList.remove("is-active"));
-      button.classList.add("is-active");
-      panel.classList.add("is-active");
-      renderAssetOptions();
-    });
+  $("#openPublishCourse").addEventListener("click", () => {
+    resetCourseForm();
+    $("#courseEditorTitle").textContent = "发布新课程";
+    showAdminPanel("courseFormPanel");
+  });
+
+  $$("[data-admin-back]").forEach((button) => {
+    button.addEventListener("click", () => showAdminPanel("adminListPanel"));
+  });
+
+  $("#reminderBadge").addEventListener("click", openMessageDrawer);
+  $$("[data-close-messages]").forEach((button) => {
+    button.addEventListener("click", closeMessageDrawer);
+  });
+  $("#readAllMessages").addEventListener("click", () => {
+    state.messagesRead = true;
+    renderReminderBadge();
+    showToast("消息已全部标记已读");
   });
 
   $("#courseFormPanel").addEventListener("submit", (event) => {
@@ -1494,6 +1647,9 @@ function bindEvents() {
       renderCourses();
       renderRecords();
       renderAdminCourseList();
+      state.messagesRead = false;
+      renderReminderBadge();
+      showAdminPanel("adminListPanel");
       showToast("已更新，学员端实时生效");
       window.setTimeout(() => setUploadProgress(false), 900);
     } catch (error) {
@@ -1511,12 +1667,30 @@ function bindEvents() {
     if (!button) return;
     const course = state.courses.find((item) => item.id === button.dataset.course);
     if (!course) return;
+    if (button.dataset.adminAction === "upload") {
+      if (!canUploadCourseAssets(course)) {
+        showToast("课程开课后才能上传回放和说明书");
+        return;
+      }
+      renderAssetOptions();
+      $("#assetCourse").value = course.id;
+      updateAssetStatus();
+      showAdminPanel("assetFormPanel");
+      return;
+    }
+    if (button.dataset.adminAction === "message") {
+      openMessageDrawer();
+      return;
+    }
+    if (button.dataset.adminAction === "reviews") {
+      renderAdminReviewPanel(course);
+      showAdminPanel("adminReviewPanel");
+      return;
+    }
     if (button.dataset.adminAction === "edit") {
       fillCourseForm(course);
-      $$("#manageView .subtab, .manage-panel").forEach((item) => item.classList.remove("is-active"));
-      $('[data-panel="courseFormPanel"]').classList.add("is-active");
-      $("#courseFormPanel").classList.add("is-active");
-      $("#courseFormPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+      $("#courseEditorTitle").textContent = "编辑课程";
+      showAdminPanel("courseFormPanel");
       showToast("已载入课程，可直接修改");
       return;
     }
@@ -1525,7 +1699,10 @@ function bindEvents() {
     }
   });
 
-  $("#cancelEdit").addEventListener("click", resetCourseForm);
+  $("#cancelEdit").addEventListener("click", () => {
+    resetCourseForm();
+    showAdminPanel("adminListPanel");
+  });
 
   $("#cancelDeleteCourse").addEventListener("click", closeDeleteConfirm);
 
@@ -1547,6 +1724,8 @@ function bindEvents() {
       renderRecords();
       renderAssetOptions();
       renderAdminCourseList();
+      state.messagesRead = false;
+      renderReminderBadge();
       closeDeleteConfirm();
       showToast("课程已删除");
     } catch (error) {
@@ -1563,6 +1742,7 @@ function bindEvents() {
     if (event.key === "Escape") closeFullscreenPlayer();
     if (event.key === "Escape") closeRatingSheet();
     if (event.key === "Escape") closeCourseDetail();
+    if (event.key === "Escape") closeMessageDrawer();
     if (event.key === "Escape" && $("#deleteConfirmModal").classList.contains("is-visible")) {
       closeDeleteConfirm();
     }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>创新学院 H5 直播课堂</title>
-    <link rel="stylesheet" href="./styles.css?v=20260512-learning" />
+    <link rel="stylesheet" href="./styles.css?v=20260512-admin" />
   </head>
   <body>
     <section class="auth-screen" id="authScreen">
@@ -35,7 +35,7 @@
           <h1>创新学院</h1>
         </div>
         <div class="header-actions">
-          <span class="reminder-badge" id="reminderBadge" aria-label="已预约课程数"><span></span><b>0</b></span>
+          <button class="reminder-badge" id="reminderBadge" type="button" aria-label="消息通知"><span></span><b>0</b></button>
           <span class="user-badge" id="userBadge">未登录</span>
           <button class="role-switch" id="logoutButton" type="button">退出</button>
           <span class="pill">学院直播</span>
@@ -109,13 +109,17 @@
       </section>
 
       <section class="view" id="manageView" aria-labelledby="tab-manage">
-        <div class="subtabs" role="tablist" aria-label="管理">
-          <button class="subtab is-active" type="button" data-panel="courseFormPanel">上传课程</button>
-          <button class="subtab" type="button" data-panel="assetFormPanel">上传视频 & 手册</button>
-          <button class="subtab" type="button" data-panel="publishManagePanel">发布管理</button>
+        <div class="admin-list-panel" id="adminListPanel">
+          <div class="admin-page-head">
+            <h3>课程管理 <span id="publishedManageCount"></span></h3>
+          <button class="admin-publish-button" id="openPublishCourse" type="button">+ 发布课程</button>
+          </div>
+          <div class="admin-course-list" id="adminCourseList"></div>
         </div>
 
-        <form class="manage-panel is-active" id="courseFormPanel">
+        <form class="manage-panel admin-editor-panel" id="courseFormPanel" hidden>
+          <button class="detail-back" type="button" data-admin-back>← 返回管理</button>
+          <h3 id="courseEditorTitle">发布新课程</h3>
           <input id="editingCourseId" type="hidden" />
           <label>课程标题<input id="courseTitle" maxlength="60" required value="Kubernetes 日志定位与告警实战" /></label>
           <label>课程形式<input id="courseSubtitle" maxlength="40" required value="带领大家完成告警链路排查" /></label>
@@ -149,7 +153,9 @@
           </div>
         </form>
 
-        <form class="manage-panel" id="assetFormPanel">
+        <form class="manage-panel admin-editor-panel" id="assetFormPanel" hidden>
+          <button class="detail-back" type="button" data-admin-back>← 返回管理</button>
+          <h3>上传回放视频和说明书</h3>
           <label>选择课程<select id="assetCourse"></select></label>
           <label>课程封面图片<input id="coverFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/*" /></label>
           <label>回放视频文件<input id="replayFile" type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*" /></label>
@@ -165,15 +171,25 @@
           <button class="primary-button full" type="submit">保存</button>
         </form>
 
-        <section class="manage-panel" id="publishManagePanel">
-          <div class="section-title compact">
-            <h3>已发布课程</h3>
-            <span id="publishedManageCount"></span>
-          </div>
-          <div class="admin-course-list" id="adminCourseList"></div>
+        <section class="manage-panel admin-editor-panel" id="adminReviewPanel" hidden>
+          <button class="detail-back" type="button" data-admin-back>← 返回管理</button>
+          <h3>评价详情</h3>
+          <div id="adminReviewContent"></div>
         </section>
       </section>
     </main>
+
+    <div class="message-drawer" id="messageDrawer" aria-hidden="true">
+      <div class="message-scrim" data-close-messages></div>
+      <aside class="message-panel" aria-label="消息通知">
+        <div class="message-head">
+          <h3>消息通知</h3>
+          <button class="message-read-all" id="readAllMessages" type="button">全部已读</button>
+          <button class="message-close" type="button" data-close-messages>×</button>
+        </div>
+        <div class="message-list" id="messageList"></div>
+      </aside>
+    </div>
 
     <div class="confirm-modal" id="deleteConfirmModal" aria-hidden="true">
       <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
@@ -239,6 +255,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=20260512-learning"></script>
+    <script src="./app.js?v=20260512-admin"></script>
   </body>
 </html>
