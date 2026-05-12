@@ -8,6 +8,7 @@ const state = {
   selectedDate: "2026-04-30",
   calendarFilter: "all",
   positionFilter: "全部",
+  recordMode: "reservations",
   ratingDraft: {},
   ratings: {},
   ratingDetails: {},
@@ -469,6 +470,7 @@ function switchTab(tab) {
   state.activeTab = tab;
   $$(".view").forEach((view) => view.classList.remove("is-active"));
   $(`#${tab}View`).classList.add("is-active");
+  if (tab !== "records") closeRatingPage();
   renderTabs();
   if (tab === "square") renderCourses();
   if (tab === "records") renderRecords();
@@ -706,8 +708,40 @@ function renderRecords() {
   const totalMs = records.reduce((sum, course) => sum + (parseDate(course.endAt) - parseDate(course.startAt)), 0);
   $("#learnedCount").textContent = records.length;
   $("#learnedHours").textContent = `${Math.round(totalMs / 36e5)}h`;
-  $("#reservationList").innerHTML = reservations.length ? reservations.map(renderReservationCard).join("") : `<div class="empty-state">暂无预约课程</div>`;
-  $("#recordList").innerHTML = records.length ? records.map(renderRecordCard).join("") : `<div class="empty-state">暂无学习记录</div>`;
+  $$(".learning-tab").forEach((button) => button.classList.toggle("is-active", button.dataset.recordMode === state.recordMode));
+  $("#learningStats").hidden = state.recordMode !== "learning";
+  $("#reservationList").hidden = state.recordMode !== "reservations";
+  $("#recordList").hidden = state.recordMode !== "learning";
+  $("#reservationList").innerHTML = reservations.length
+    ? reservations.map((course, index) => renderLearningCourseCard(course, { type: "reservation", issueIndex: reservations.length - index })).join("")
+    : `<div class="empty-state">暂无预约课程</div>`;
+  $("#recordList").innerHTML = records.length
+    ? records.map((course, index) => renderLearningCourseCard(course, { type: "learning", issueIndex: records.length - index })).join("")
+    : `<div class="empty-state">暂无学习记录</div>`;
+}
+
+function renderLearningCourseCard(course, { type, issueIndex }) {
+  const rating = state.ratings[course.id] || 0;
+  const action = type === "reservation"
+    ? `<button class="learning-card-action" type="button" data-action="cancelReminder" data-course="${course.id}">↩ 取消预约</button>`
+    : `<button class="learning-card-action ${rating ? "is-rated" : ""}" type="button" data-action="openRating" data-course="${course.id}">${rating ? "查看评价" : "☆ 点评"}</button>`;
+  return `
+    <article class="learning-course-card">
+      <div class="prototype-cover" ${coverStyle(course)}>
+        <div class="prototype-cover-copy">
+          <span>第${issueIndex}期</span>
+          <strong>${course.content[0] || course.subtitle}</strong>
+        </div>
+      </div>
+      <div class="learning-course-body">
+        <h4>${course.title}</h4>
+        <div class="tag-row">
+          ${course.positions.slice(0, 2).map((pos) => `<span class="tag">${pos}</span>`).join("")}
+        </div>
+      </div>
+      <div class="learning-course-footer">${action}</div>
+    </article>
+  `;
 }
 
 function renderReservationCard(course) {
@@ -782,14 +816,119 @@ function resetRatingSheet() {
   $("#ratingComment").value = "";
 }
 
+function myRatingDetail(courseId) {
+  const details = state.ratingDetails[courseId] || [];
+  return details.find((item) => item.username === state.currentUser?.username) || null;
+}
+
+function openRatingPage(course) {
+  $("#learningListPanel").hidden = true;
+  $("#ratingPage").hidden = false;
+  $("#ratingPageContent").innerHTML = renderRatingPage(course);
+  if (!state.ratings[course.id]) {
+    resetRatingSheet();
+    $("#pageRatingCourseId").value = course.id;
+    renderRatingStars("pageRatingOverall", 0);
+    renderRatingStars("pageRatingClarity", 0);
+    renderRatingStars("pageRatingTeacher", 0);
+  }
+  $("#ratingPage").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderRatingPage(course) {
+  const detail = myRatingDetail(course.id);
+  const readonly = Boolean(state.ratings[course.id]);
+  const teacher = course.teacher.split("-").pop();
+  if (readonly) {
+    return `
+      <article class="rating-page-card">
+        <h3>AI培训课堂第4期 · 评分表</h3>
+        <p class="rating-course">${course.subtitle}：${course.content.join("，")}。适用于${course.scenarios.join("、")}。</p>
+        ${renderReadonlyRatingField("对 AI 直播课堂的整体打分", detail?.score || state.ratings[course.id])}
+        ${renderReadonlyRatingField("你认为本堂课老师讲解是否清晰完整，对你的工作有帮助？", detail?.clarityScore || detail?.score || state.ratings[course.id])}
+        ${renderReadonlyChoiceField("本次课程内容难度如何？", detail?.difficulty || "未填写")}
+        ${renderReadonlyChoiceField("跟随老师演示，你是否成功完成了安装和基础配置？", detail?.completedSetup || "未填写")}
+        ${renderReadonlyRatingField(`对本次主讲老师 ${teacher} 的综合评价`, detail?.teacherScore || detail?.score || state.ratings[course.id])}
+        <div class="rating-readonly-comment">
+          <b>你希望下次课程改进或新增哪些内容？（选填）</b>
+          <p>${detail?.comment || "未填写"}</p>
+        </div>
+      </article>
+    `;
+  }
+  return `
+    <article class="rating-page-card">
+      <h3>AI培训课堂第4期 · 评分表</h3>
+      <p class="rating-course">${course.subtitle}：${course.content.join("，")}。适用于${course.scenarios.join("、")}。</p>
+      <form id="pageRatingForm" class="rating-form">
+        <input id="pageRatingCourseId" type="hidden" />
+        ${renderEditableRatingField("对 AI 直播课堂的整体打分", "pageRatingOverall", true)}
+        ${renderEditableRatingField("你认为本堂课老师讲解是否清晰完整，对你的工作有帮助？", "pageRatingClarity")}
+        <label class="rating-field">
+          <span>本次课程内容难度如何？</span>
+          <span class="choice-row">
+            ${["简单", "适中", "较难"].map((item) => `<button class="choice-button ${item === "适中" ? "is-active" : ""}" type="button" data-choice-target="pageRatingDifficulty" data-choice-value="${item}">${item}</button>`).join("")}
+          </span>
+          <input id="pageRatingDifficulty" type="hidden" value="适中" />
+        </label>
+        <label class="rating-field">
+          <span>跟随老师演示，你是否成功完成了安装和基础配置？</span>
+          <span class="choice-row">
+            ${["是", "否"].map((item) => `<button class="choice-button ${item === "是" ? "is-active" : ""}" type="button" data-choice-target="pageRatingCompleted" data-choice-value="${item}">${item}</button>`).join("")}
+          </span>
+          <input id="pageRatingCompleted" type="hidden" value="是" />
+        </label>
+        ${renderEditableRatingField(`对本次主讲老师 ${teacher} 的综合评价`, "pageRatingTeacher")}
+        <label class="rating-field no-panel">
+          <span>你希望下次课程改进或新增哪些内容？（选填）</span>
+          <textarea id="pageRatingComment" rows="4" placeholder="请输入你的建议..."></textarea>
+        </label>
+        <button class="rating-submit-button" type="submit">✈ 提交评价</button>
+      </form>
+    </article>
+  `;
+}
+
+function renderEditableRatingField(label, fieldId, required = false) {
+  return `
+    <label class="rating-field">
+      <span>${label}</span>
+      <span class="rating-scale">${[1, 2, 3, 4, 5].map((score) => `<em>${score}</em>`).join("")}</span>
+      <span class="rating-stars numbered" data-rating-field="${fieldId}"></span>
+      <input id="${fieldId}" type="hidden" ${required ? "required" : ""} />
+    </label>
+  `;
+}
+
+function renderReadonlyRatingField(label, score) {
+  const value = Number(score || 0);
+  return `
+    <section class="rating-field readonly">
+      <span>${label}</span>
+      <span class="readonly-stars">${"★".repeat(value)}${"☆".repeat(Math.max(0, 5 - value))}</span>
+    </section>
+  `;
+}
+
+function renderReadonlyChoiceField(label, value) {
+  return `
+    <section class="rating-field readonly">
+      <span>${label}</span>
+      <span class="choice-row"><span class="choice-button is-active">${value}</span></span>
+    </section>
+  `;
+}
+
+function closeRatingPage() {
+  const page = $("#ratingPage");
+  if (!page || page.hidden) return;
+  page.hidden = true;
+  $("#learningListPanel").hidden = false;
+  $("#recordsView").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function openRatingSheet(course) {
-  if (state.ratings[course.id]) return;
-  resetRatingSheet();
-  $("#ratingCourseId").value = course.id;
-  $("#ratingCourseIntro").textContent = `${course.title} · ${course.subtitle}`;
-  $("#ratingTeacherLabel").textContent = `对本次主讲老师 ${course.teacher.split("-").pop()} 的综合评价`;
-  $("#ratingSheet").classList.add("is-visible");
-  $("#ratingSheet").setAttribute("aria-hidden", "false");
+  openRatingPage(course);
 }
 
 function closeRatingSheet() {
@@ -836,6 +975,44 @@ async function submitRatingSheet() {
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "提交评价";
+  }
+}
+
+async function submitPageRating() {
+  const courseId = $("#pageRatingCourseId").value;
+  const score = Number($("#pageRatingOverall").value);
+  if (!score) {
+    showToast("请先选择整体评分");
+    return;
+  }
+  const submitButton = $("#pageRatingForm button[type='submit']");
+  submitButton.disabled = true;
+  submitButton.textContent = "提交中...";
+  try {
+    await apiFetch("/api/records", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "rate",
+        courseId,
+        score,
+        clarityScore: Number($("#pageRatingClarity").value || score),
+        teacherScore: Number($("#pageRatingTeacher").value || score),
+        difficulty: $("#pageRatingDifficulty").value,
+        completedSetup: $("#pageRatingCompleted").value,
+        comment: $("#pageRatingComment").value.trim(),
+      }),
+    });
+    state.ratings[courseId] = score;
+    await loadRecords();
+    renderRecords();
+    const course = state.courses.find((item) => item.id === courseId);
+    if (course) $("#ratingPageContent").innerHTML = renderRatingPage(course);
+    showToast("评价已提交");
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "✈ 提交评价";
   }
 }
 
@@ -1122,6 +1299,13 @@ function bindEvents() {
       setRatingValue(ratingStar.dataset.ratingTarget, Number(ratingStar.dataset.score));
       return;
     }
+    const choiceButton = event.target.closest("[data-choice-target]");
+    if (choiceButton) {
+      $(`#${choiceButton.dataset.choiceTarget}`).value = choiceButton.dataset.choiceValue;
+      $$(`[data-choice-target="${choiceButton.dataset.choiceTarget}"]`).forEach((button) => button.classList.remove("is-active"));
+      choiceButton.classList.add("is-active");
+      return;
+    }
     const actionButton = event.target.closest("[data-action]");
   if (!actionButton || actionButton.disabled) return;
   const course = state.courses.find((item) => item.id === actionButton.dataset.course);
@@ -1203,14 +1387,27 @@ function bindEvents() {
     renderCourses();
   });
 
+  $("#learningListPanel").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-record-mode]");
+    if (!button) return;
+    state.recordMode = button.dataset.recordMode;
+    renderRecords();
+  });
+
   $("#closeRatingSheet").addEventListener("click", closeRatingSheet);
   $("#ratingSheet").addEventListener("click", (event) => {
     if (event.target.id === "ratingSheet") closeRatingSheet();
   });
   $("#backToSquare").addEventListener("click", closeCourseDetail);
+  $("#backToLearning").addEventListener("click", closeRatingPage);
   $("#ratingForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     await submitRatingSheet();
+  });
+  $("#ratingPage").addEventListener("submit", async (event) => {
+    if (event.target.id !== "pageRatingForm") return;
+    event.preventDefault();
+    await submitPageRating();
   });
 
   $$("#manageView .subtab").forEach((button) => {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>创新学院 H5 直播课堂</title>
-    <link rel="stylesheet" href="./styles.css?v=20260512-detail" />
+    <link rel="stylesheet" href="./styles.css?v=20260512-learning" />
   </head>
   <body>
     <section class="auth-screen" id="authScreen">
@@ -84,24 +84,28 @@
       </section>
 
       <section class="view" id="recordsView" aria-labelledby="tab-records">
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span>已学课程数</span>
-            <strong id="learnedCount">0</strong>
-          </article>
-          <article class="stat-card">
-            <span>累计时长</span>
-            <strong id="learnedHours">0h</strong>
-          </article>
+        <div id="learningListPanel">
+          <div class="learning-tabs" role="tablist" aria-label="学习记录">
+            <button class="learning-tab is-active" type="button" data-record-mode="reservations">我的预约</button>
+            <button class="learning-tab" type="button" data-record-mode="learning">我的学习</button>
+          </div>
+          <div id="learningStats" class="stats-grid" hidden>
+            <article class="stat-card">
+              <strong id="learnedCount">0</strong>
+              <span>已学课程</span>
+            </article>
+            <article class="stat-card">
+              <strong id="learnedHours">0h</strong>
+              <span>累计时长</span>
+            </article>
+          </div>
+          <div class="record-list learning-card-grid" id="reservationList"></div>
+          <div class="record-list learning-card-grid" id="recordList" hidden></div>
         </div>
-        <div class="section-title compact">
-          <h3>我的预约</h3>
+        <div class="rating-page" id="ratingPage" hidden>
+          <button class="detail-back" id="backToLearning" type="button">← 返回学习记录</button>
+          <div id="ratingPageContent"></div>
         </div>
-        <div class="record-list reservation-list" id="reservationList"></div>
-        <div class="section-title compact">
-          <h3>我的学习</h3>
-        </div>
-        <div class="record-list" id="recordList"></div>
       </section>
 
       <section class="view" id="manageView" aria-labelledby="tab-manage">
@@ -235,6 +239,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=20260512-detail"></script>
+    <script src="./app.js?v=20260512-learning"></script>
   </body>
 </html>
