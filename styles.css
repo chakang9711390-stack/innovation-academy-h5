@@ -1020,8 +1020,8 @@ h1 {
   border-radius: 7px;
   background: #7d3d27;
   color: #fff;
-  padding: 7px 10px;
-  font-size: 13px;
+  padding: 7px 8px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -1041,16 +1041,16 @@ h1 {
 .admin-table {
   border: 1px solid #e5cbb8;
   border-radius: 12px;
-  overflow: visible;
+  overflow: hidden;
   background: #fff;
 }
 
 .admin-table-head,
 .admin-course-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.4fr) 104px 86px 54px 72px minmax(260px, 1.2fr);
+  grid-template-columns: minmax(190px, 1.5fr) 96px 78px 48px 64px minmax(210px, 0.95fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .admin-table-head {
@@ -1097,10 +1097,17 @@ h1 {
 }
 
 .admin-actions {
-  display: flex;
-  gap: 7px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
   min-width: 0;
+}
+
+.admin-actions button {
+  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .publish-course-form {
@@ -2259,6 +2266,8 @@ textarea:focus {
   .admin-actions {
     justify-content: flex-start;
     margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .admin-action-button,
