@@ -20,8 +20,12 @@ module.exports = async function handler(req, res) {
     const size = Number(body.size || 0);
     const maxBytes = Number(process.env.OBJECT_MAX_UPLOAD_MB || DEFAULT_MAX_UPLOAD_MB) * 1024 * 1024;
 
-    if (!courseId || !["replay", "handbook"].includes(type) || !fileName) {
+    if (!courseId || !["cover", "replay", "handbook"].includes(type) || !fileName) {
       json(res, 400, { error: "上传参数不完整" });
+      return;
+    }
+    if (type === "cover" && !contentType.startsWith("image/")) {
+      json(res, 400, { error: "课程封面需为图片格式" });
       return;
     }
     if (type === "replay" && !contentType.startsWith("video/")) {
@@ -38,11 +42,13 @@ module.exports = async function handler(req, res) {
     }
 
     const sql = getSql();
-    const eligibleRows = await sql`
-      select id
-      from courses
-      where id = ${courseId} and status = 'published' and start_at <= now()
-    `;
+    const eligibleRows = type === "cover"
+      ? await sql`select id from courses where id = ${courseId} and status = 'published'`
+      : await sql`
+          select id
+          from courses
+          where id = ${courseId} and status = 'published' and start_at <= now()
+        `;
     if (!eligibleRows[0]) {
       json(res, 400, { error: "课程未开播，不能上传回放和手册" });
       return;

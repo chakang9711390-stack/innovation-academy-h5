@@ -6,6 +6,7 @@ const state = {
   activeTab: "calendar",
   month: new Date(2026, 3, 1),
   selectedDate: "2026-04-30",
+  calendarFilter: "all",
   positionFilter: "全部",
   ratingDraft: {},
   ratings: {},
@@ -23,6 +24,7 @@ const state = {
       scenarios: ["内部域名巡检", "自动化排障", "跨团队故障同步", "值班告警降噪", "平台能力评估"],
       teacher: "创新学院-Ben",
       liveUrl: "https://example.com/live/dns",
+      coverUrl: "",
       replayUrl: "",
       handbookUrl: "",
       form: "在线安装实操",
@@ -39,6 +41,7 @@ const state = {
       scenarios: ["远程联调", "灰度验证", "私有服务暴露", "权限边界梳理", "临时演示环境"],
       teacher: "创新学院-Ada",
       liveUrl: "https://example.com/live/proxy",
+      coverUrl: "",
       replayUrl: "https://example.feishu.cn/minutes/proxy-review",
       handbookUrl: "proxy-handbook.pdf",
       form: "讲解",
@@ -55,6 +58,7 @@ const state = {
       scenarios: ["接口超时", "跨集群访问异常", "发布后错误率上升", "网络策略验证", "容量压测"],
       teacher: "平台团队-Cora",
       liveUrl: "https://example.com/live/network",
+      coverUrl: "",
       replayUrl: "https://example.feishu.cn/minutes/network",
       handbookUrl: "",
       form: "实战演示",
@@ -71,6 +75,7 @@ const state = {
       scenarios: ["日常值班", "节前保障", "变更前检查", "新人交接", "重复问题收敛"],
       teacher: "创新学院-Lin",
       liveUrl: "https://example.com/live/ops-script",
+      coverUrl: "",
       replayUrl: "",
       handbookUrl: "",
       form: "在线安装实操",
@@ -137,6 +142,16 @@ function canUploadCourseAssets(course) {
 
 function statusLabel(status) {
   return { upcoming: "即将开播", live: "直播中", ended: "已结束" }[status];
+}
+
+function defaultCover(course) {
+  const seed = encodeURIComponent(course.title || "innovation");
+  return `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80&ixid=${seed}`;
+}
+
+function coverStyle(course) {
+  const url = String(course.coverUrl || defaultCover(course)).replace(/['"()\\]/g, "");
+  return `style="background-image: linear-gradient(180deg, rgba(10, 42, 55, 0.08), rgba(10, 42, 55, 0.34)), url('${url}')"`;
 }
 
 function weekday(date) {
@@ -347,7 +362,7 @@ async function downloadHandbook(course) {
 }
 
 function markCourseRecorded(courseId, action) {
-  state.watched.add(courseId);
+  if (action === "watch" || action === "download") state.watched.add(courseId);
   renderRecords();
   apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action, courseId }) }).catch((error) => showToast(error.message));
 }
@@ -477,8 +492,14 @@ function renderCalendar() {
 }
 
 function renderEventList() {
+  renderCalendarFilters();
   const events = monthEvents()
     .filter((course) => !state.selectedDate || course.startAt.startsWith(state.selectedDate))
+    .filter((course) => {
+      if (state.calendarFilter === "reserved") return state.reminders.has(course.id);
+      if (state.calendarFilter === "unreserved") return !state.reminders.has(course.id);
+      return true;
+    })
     .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
   const monthName = state.month.toLocaleDateString("zh-CN", { month: "long" });
@@ -491,6 +512,12 @@ function renderEventList() {
   }
 
   $("#eventList").innerHTML = events.map(renderEventCard).join("");
+}
+
+function renderCalendarFilters() {
+  $$("#calendarFilters [data-calendar-filter]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.calendarFilter === state.calendarFilter);
+  });
 }
 
 function renderEventCard(course) {
@@ -510,8 +537,13 @@ function renderEventCard(course) {
           <span class="tag form">${course.form}</span>
           <span class="status ${status}">${statusLabel(status)}</span>
         </span>
+        <span class="event-flat">
+          ${course.content.map((item) => `<b>${item}</b>`).join("")}
+          ${course.scenarios.map((item) => `<i>${item}</i>`).join("")}
+        </span>
         <span class="event-card-actions">
           ${status === "ended" ? "" : `<button class="secondary-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>`}
+          ${course.liveUrl ? `<a class="inline-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">会议链接</a>` : ""}
           ${reminded ? `<em>提前1天 · 提前1小时提醒</em>` : ""}
         </span>
       </span>
@@ -521,13 +553,11 @@ function renderEventCard(course) {
 
 function renderCourses() {
   renderSquarePositionFilter();
-  const published = state.courses.filter((course) => course.published && (state.positionFilter === "全部" || course.positions.includes(state.positionFilter)));
-  const upcoming = published.filter((course) => getCourseRuntime(course) !== "ended").sort((a, b) => parseDate(a.startAt) - parseDate(b.startAt));
-  const past = published.filter((course) => getCourseRuntime(course) === "ended").sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
+  const published = state.courses.filter((course) => course.published && getCourseRuntime(course) === "ended" && (state.positionFilter === "全部" || course.positions.includes(state.positionFilter)));
+  const replayCourses = published.sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
-  $("#upcomingCount").textContent = `${upcoming.length} 门`;
-  $("#upcomingCourses").innerHTML = upcoming.length ? upcoming.map(renderCourseCard).join("") : `<div class="empty-state">暂无本期课程</div>`;
-  $("#pastCourses").innerHTML = past.length ? past.map(renderCourseCard).join("") : `<div class="empty-state">暂无往期课程</div>`;
+  $("#upcomingCount").textContent = `${replayCourses.length} 门`;
+  $("#upcomingCourses").innerHTML = replayCourses.length ? replayCourses.map(renderCourseCard).join("") : `<div class="empty-state">暂无课程回放</div>`;
 }
 
 function renderSquarePositionFilter() {
@@ -540,37 +570,27 @@ function renderSquarePositionFilter() {
 function renderCourseCard(course) {
   const status = getCourseRuntime(course);
   const initial = course.teacher.split("-").pop().slice(0, 1).toUpperCase();
-  const actionHtml = renderCourseAction(course, status);
 
   return `
-    <article class="course-card ${status === "ended" ? "is-past" : ""}" id="course-${course.id}">
+    <article class="course-card replay-tile ${status === "ended" ? "is-past" : ""}" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
+      <div class="course-cover" ${coverStyle(course)}>
+        <span>${formatFullTime(course).split("（")[0]}</span>
+      </div>
       <div class="course-head">
         <div>
           <h4>${course.title}</h4>
-          <p class="meta">${course.subtitle}</p>
           <p class="meta">${formatFullTime(course)}</p>
+          <p class="meta">${course.subtitle}</p>
+          <p class="course-summary">${course.content.slice(0, 2).join("，")}</p>
         </div>
         <span class="avatar">${initial}</span>
       </div>
       <div class="tag-row">
         ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
-        <span class="status ${status}">${statusLabel(status)}</span>
       </div>
-      <div class="content-grid">
-        <div class="mini-panel">
-          <b>课程内容</b>
-          <ol>${course.content.map((item) => `<li>${item}</li>`).join("")}</ol>
-        </div>
-        <div class="mini-panel">
-          <b>适用场景</b>
-          <ul>${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
-        </div>
-      </div>
-      <div class="teacher-row">
-        <span class="meta">授课老师 · ${course.teacher}</span>
-      </div>
-      <div class="record-actions">
-        ${actionHtml}
+      <div class="course-link-row">
+        <span>${course.replayUrl ? "可在线播放" : "回放上传中"}</span>
+        <span>查看详情</span>
       </div>
     </article>
   `;
@@ -583,12 +603,68 @@ function renderCourseAction(course, status) {
   `;
 }
 
+function openCourseDetail(course) {
+  const status = getCourseRuntime(course);
+  $("#courseDetailContent").innerHTML = `
+    <div class="detail-cover" ${coverStyle(course)}></div>
+    <div class="detail-body">
+      <p class="eyebrow">课程详情</p>
+      <h3 id="courseDetailTitle">${course.title}</h3>
+      <p class="meta">${course.subtitle}</p>
+      <p class="meta">${formatFullTime(course)} · ${course.teacher}</p>
+      <div class="tag-row">
+        ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
+        <span class="status ${status}">${statusLabel(status)}</span>
+      </div>
+      <div class="content-grid detail-grid">
+        <div class="mini-panel">
+          <b>课程内容</b>
+          <ol>${course.content.map((item) => `<li>${item}</li>`).join("")}</ol>
+        </div>
+        <div class="mini-panel">
+          <b>适用场景</b>
+          <ul>${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+      </div>
+      <div class="record-actions">${renderCourseAction(course, status)}</div>
+      <div class="review-list">
+        <b>评价详情</b>
+        <p class="meta">${state.ratings[course.id] ? `我的评价：${"★".repeat(state.ratings[course.id])}` : "暂无评价，完成学习后可在学习记录中点评。"}</p>
+      </div>
+    </div>
+  `;
+  $("#courseDetailSheet").classList.add("is-visible");
+  $("#courseDetailSheet").setAttribute("aria-hidden", "false");
+}
+
+function closeCourseDetail() {
+  $("#courseDetailSheet")?.classList.remove("is-visible");
+  $("#courseDetailSheet")?.setAttribute("aria-hidden", "true");
+}
+
 function renderRecords() {
+  const reservations = state.courses
+    .filter((course) => state.reminders.has(course.id))
+    .sort((a, b) => parseDate(a.startAt) - parseDate(b.startAt));
   const records = state.courses.filter((course) => state.watched.has(course.id));
   const totalMs = records.reduce((sum, course) => sum + (parseDate(course.endAt) - parseDate(course.startAt)), 0);
   $("#learnedCount").textContent = records.length;
   $("#learnedHours").textContent = `${Math.round(totalMs / 36e5)}h`;
+  $("#reservationList").innerHTML = reservations.length ? reservations.map(renderReservationCard).join("") : `<div class="empty-state">暂无预约课程</div>`;
   $("#recordList").innerHTML = records.length ? records.map(renderRecordCard).join("") : `<div class="empty-state">暂无学习记录</div>`;
+}
+
+function renderReservationCard(course) {
+  return `
+    <article class="record-card reservation-card">
+      <h4>${course.title}</h4>
+      <p class="meta">${formatFullTime(course)}</p>
+      <p class="meta">提前1天 · 提前1小时提醒</p>
+      <div class="record-actions">
+        <button class="secondary-button" type="button" data-action="cancelReminder" data-course="${course.id}">取消预约</button>
+      </div>
+    </article>
+  `;
 }
 
 function renderRecordCard(course) {
@@ -765,9 +841,11 @@ function renderAdminCourseItem(course) {
 
 function updateAssetStatus() {
   const course = state.courses.find((item) => item.id === $("#assetCourse").value);
+  $("#coverFile").value = "";
   $("#replayFile").value = "";
   $("#handbookFile").value = "";
   const hasCourse = Boolean(course);
+  $("#coverFile").disabled = !hasCourse;
   $("#replayFile").disabled = !hasCourse;
   $("#handbookFile").disabled = !hasCourse;
   $("#assetFormPanel button[type='submit']").disabled = !hasCourse;
@@ -775,7 +853,7 @@ function updateAssetStatus() {
     $("#assetStatus").innerHTML = "未开播课程不会出现在这里；课程到开课时间后可上传回放视频和知识手册。";
     return;
   }
-  $("#assetStatus").innerHTML = `当前回放：${course.replayUrl ? course.replayFileName || "已上传视频" : "未上传"}<br />当前手册：${course.handbookUrl ? course.handbookFileName || "已上传 PDF" : "未上传"}`;
+  $("#assetStatus").innerHTML = `当前封面：${course.coverUrl ? course.coverFileName || "已设置封面" : "未上传"}<br />当前回放：${course.replayUrl ? course.replayFileName || "已上传视频" : "未上传"}<br />当前手册：${course.handbookUrl ? course.handbookFileName || "已上传 PDF" : "未上传"}`;
 }
 
 async function loadCourses() {
@@ -829,6 +907,7 @@ function getCoursePayload(published) {
     scenarios: lines("#scenarioLines").slice(0, 8),
     teacher: $("#teacherName").value.trim(),
     liveUrl: $("#liveUrl").value.trim(),
+    coverUrl: $("#coverUrl").value.trim(),
     form: "在线实操",
     published,
   };
@@ -845,6 +924,7 @@ function resetCourseForm() {
   $("#editingCourseId").value = "";
   $("#courseTitle").value = "";
   $("#courseSubtitle").value = "";
+  $("#coverUrl").value = "";
   $$("#positionChecks input").forEach((input, index) => {
     input.checked = index < 2;
   });
@@ -866,6 +946,7 @@ function fillCourseForm(course) {
   $("#editingCourseId").value = course.id;
   $("#courseTitle").value = course.title;
   $("#courseSubtitle").value = course.subtitle;
+  $("#coverUrl").value = course.coverUrl || "";
   $$("#positionChecks input, #morePositionChecks input").forEach((input) => {
     input.checked = course.positions.includes(input.value);
   });
@@ -957,6 +1038,13 @@ function bindEvents() {
     renderCalendar();
   });
 
+  $("#calendarFilters").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-calendar-filter]");
+    if (!button) return;
+    state.calendarFilter = button.dataset.calendarFilter;
+    renderEventList();
+  });
+
   $("#eventList").addEventListener("click", (event) => {
     if (event.target.closest("[data-action]")) return;
     const card = event.target.closest("[data-course]");
@@ -972,9 +1060,13 @@ function bindEvents() {
       return;
     }
     const actionButton = event.target.closest("[data-action]");
-    if (!actionButton || actionButton.disabled) return;
-    const course = state.courses.find((item) => item.id === actionButton.dataset.course);
-    const action = actionButton.dataset.action;
+  if (!actionButton || actionButton.disabled) return;
+  const course = state.courses.find((item) => item.id === actionButton.dataset.course);
+  const action = actionButton.dataset.action;
+    if (action === "courseDetail") {
+      openCourseDetail(course);
+      return;
+    }
     if (action === "remind") showToast("已写入日历提醒");
     if (action === "signup") {
       state.reminders.add(course.id);
@@ -983,6 +1075,14 @@ function bindEvents() {
       renderCourses();
       renderReminderBadge();
       showToast("已预约，提前1天和提前1小时提醒");
+    }
+    if (action === "cancelReminder") {
+      state.reminders.delete(course.id);
+      renderCalendar();
+      renderRecords();
+      renderReminderBadge();
+      showToast("已取消预约");
+      apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action: "cancelReminder", courseId: course.id }) }).catch((error) => showToast(error.message));
     }
     if (action === "live") window.open(course.liveUrl, "_blank");
     if (action === "replay" || action === "recordReplay") {
@@ -1024,6 +1124,10 @@ function bindEvents() {
   $("#closeRatingSheet").addEventListener("click", closeRatingSheet);
   $("#ratingSheet").addEventListener("click", (event) => {
     if (event.target.id === "ratingSheet") closeRatingSheet();
+  });
+  $("#closeCourseDetail").addEventListener("click", closeCourseDetail);
+  $("#courseDetailSheet").addEventListener("click", (event) => {
+    if (event.target.id === "courseDetailSheet") closeCourseDetail();
   });
   $("#ratingForm").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1067,10 +1171,15 @@ function bindEvents() {
       showToast("暂无可上传课程");
       return;
     }
+    const coverFile = $("#coverFile").files[0];
     const replayFile = $("#replayFile").files[0];
     const handbookFile = $("#handbookFile").files[0];
-    if (!replayFile && !handbookFile) {
-      showToast("请选择要上传的视频或 PDF");
+    if (!coverFile && !replayFile && !handbookFile) {
+      showToast("请选择要上传的封面、视频或 PDF");
+      return;
+    }
+    if (coverFile && !coverFile.type.startsWith("image/")) {
+      showToast("课程封面需为图片格式");
       return;
     }
     if (replayFile && !replayFile.type.startsWith("video/")) {
@@ -1085,22 +1194,23 @@ function bindEvents() {
       const submitButton = $("#assetFormPanel button[type='submit']");
       submitButton.disabled = true;
       submitButton.textContent = "上传中...";
-      const files = [replayFile, handbookFile].filter(Boolean);
+      const files = [coverFile, replayFile, handbookFile].filter(Boolean);
       const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
-      const loadedByType = { replay: 0, handbook: 0 };
+      const loadedByType = { cover: 0, replay: 0, handbook: 0 };
       const updateProgress = (type, loaded) => {
         loadedByType[type] = loaded;
-        const loadedBytes = loadedByType.replay + loadedByType.handbook;
+        const loadedBytes = loadedByType.cover + loadedByType.replay + loadedByType.handbook;
         const percent = totalBytes ? (loadedBytes / totalBytes) * 100 : 0;
         setUploadProgress(true, percent, `上传进度 ${Math.round(percent)}%`);
       };
       setUploadProgress(true, 0, "准备上传...");
+      const coverAsset = await uploadAssetFile(course, "cover", coverFile, (loaded) => updateProgress("cover", loaded));
       const replayAsset = await uploadAssetFile(course, "replay", replayFile, (loaded) => updateProgress("replay", loaded));
       const handbookAsset = await uploadAssetFile(course, "handbook", handbookFile, (loaded) => updateProgress("handbook", loaded));
       setUploadProgress(true, 100, "上传完成，正在保存...");
       const data = await apiFetch("/api/courses", {
         method: "PUT",
-        body: JSON.stringify({ mode: "assets", courseId: course.id, replayAsset, handbookAsset }),
+        body: JSON.stringify({ mode: "assets", courseId: course.id, coverAsset, replayAsset, handbookAsset }),
       });
       const index = state.courses.findIndex((item) => item.id === course.id);
       state.courses[index] = data.course;
@@ -1176,6 +1286,7 @@ function bindEvents() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeFullscreenPlayer();
     if (event.key === "Escape") closeRatingSheet();
+    if (event.key === "Escape") closeCourseDetail();
     if (event.key === "Escape" && $("#deleteConfirmModal").classList.contains("is-visible")) {
       closeDeleteConfirm();
     }

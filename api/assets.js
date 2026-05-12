@@ -15,13 +15,22 @@ module.exports = async function handler(req, res) {
     const courseId = url.searchParams.get("courseId") || "";
     const type = url.searchParams.get("type") || "";
 
-    if (!courseId || !["replay", "handbook"].includes(type)) {
+    if (!courseId || !["cover", "replay", "handbook"].includes(type)) {
       res.statusCode = 400;
       res.end("Invalid asset request");
       return;
     }
 
-    const rows = type === "replay"
+    const rows = type === "cover"
+      ? await sql`
+          select cover_file_name as file_name,
+                 cover_content_type as content_type,
+                 cover_storage_key as storage_key,
+                 encode(cover_data, 'base64') as data
+          from courses
+          where id = ${courseId} and status = 'published' and (cover_data is not null or cover_storage_key is not null)
+        `
+      : type === "replay"
       ? await sql`
           select replay_file_name as file_name,
                  replay_content_type as content_type,

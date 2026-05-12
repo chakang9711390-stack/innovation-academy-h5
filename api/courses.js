@@ -2,8 +2,9 @@ const { ensureSchema, getSql, json, normalizeCourse, readBody, requireAdmin } = 
 
 const COURSE_SELECT = `
   id, title, subtitle, positions, start_at, end_at, content, scenarios,
-  teacher, live_url, replay_url, handbook_url, replay_file_name, handbook_file_name,
-  replay_storage_key, handbook_storage_key,
+  teacher, live_url, cover_url, replay_url, handbook_url, cover_file_name, replay_file_name, handbook_file_name,
+  cover_storage_key, replay_storage_key, handbook_storage_key,
+  cover_data is not null as has_cover_file,
   replay_data is not null as has_replay_file,
   handbook_data is not null as has_handbook_file,
   form, status, created_at, updated_at
@@ -32,14 +33,14 @@ module.exports = async function handler(req, res) {
       await sql`
         insert into courses (
           id, title, subtitle, positions, start_at, end_at, content, scenarios,
-          teacher, live_url, replay_url, handbook_url, form, status
+          teacher, live_url, cover_url, replay_url, handbook_url, form, status
         )
         values (
           ${id}, ${String(body.title || "").trim()}, ${String(body.subtitle || "").trim()},
           ${JSON.stringify(body.positions || [])}::jsonb, ${body.startAt}, ${body.endAt},
           ${JSON.stringify(body.content || [])}::jsonb, ${JSON.stringify(body.scenarios || [])}::jsonb,
           ${String(body.teacher || "").trim()}, ${String(body.liveUrl || "").trim()},
-          '', '', ${String(body.form || "在线实操")}, ${status}
+          ${String(body.coverUrl || "").trim()}, '', '', ${String(body.form || "在线实操")}, ${status}
         )
       `;
       const rows = await sql.query(`select ${COURSE_SELECT} from courses where id = $1`, [id]);
@@ -52,17 +53,30 @@ module.exports = async function handler(req, res) {
       const body = await readBody(req);
       const courseId = String(body.courseId || "");
       if (body.mode === "assets") {
+        const coverAsset = body.coverAsset;
+        const replayAsset = body.replayAsset;
+        const handbookAsset = body.handbookAsset;
         const eligibleRows = await sql`
           select id
           from courses
-          where id = ${courseId} and status = 'published' and start_at <= now()
+          where id = ${courseId} and status = 'published' and (${Boolean(coverAsset?.storageKey && !replayAsset?.storageKey && !handbookAsset?.storageKey)} or start_at <= now())
         `;
         if (!eligibleRows[0]) {
           json(res, 400, { error: "课程未开播，不能上传回放和手册" });
           return;
         }
-        const replayAsset = body.replayAsset;
-        const handbookAsset = body.handbookAsset;
+        if (coverAsset?.storageKey) {
+          await sql`
+            update courses
+            set cover_file_name = ${String(coverAsset.name || "course-cover")},
+                cover_content_type = ${String(coverAsset.type || "image/jpeg")},
+                cover_storage_key = ${String(coverAsset.storageKey)},
+                cover_url = ${String(coverAsset.url || "")},
+                cover_data = null,
+                updated_at = now()
+            where id = ${courseId}
+          `;
+        }
         if (replayAsset?.storageKey) {
           await sql`
             update courses
@@ -105,6 +119,7 @@ module.exports = async function handler(req, res) {
               scenarios = ${JSON.stringify(body.scenarios || [])}::jsonb,
               teacher = ${String(body.teacher || "").trim()},
               live_url = ${String(body.liveUrl || "").trim()},
+              cover_url = ${String(body.coverUrl || "").trim()},
               form = ${String(body.form || "在线实操")},
               status = ${status},
               updated_at = now()

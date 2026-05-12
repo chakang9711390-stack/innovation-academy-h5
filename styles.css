@@ -1,24 +1,26 @@
 :root {
   color-scheme: light;
-  --bg: #f6f9fb;
+  --bg: #f7f3ed;
   --surface: #ffffff;
-  --surface-soft: #f0f7f8;
+  --surface-soft: #fff7ec;
   --panel: #ffffff;
   --panel-soft: #ffffff;
-  --line: #d9e6ea;
-  --line-strong: #b9d1d8;
-  --text: #1b2b34;
-  --muted: #60727c;
-  --subtle: #8a9aa3;
-  --mint: #39b8a7;
-  --mint-deep: #117568;
-  --blue: #4b8fe8;
-  --blue-soft: #e9f2ff;
-  --gold: #d99a23;
-  --red: #e95c55;
-  --green-soft: #e7f7f4;
+  --line: #eadfd1;
+  --line-strong: #d9c7af;
+  --text: #24313a;
+  --muted: #6f7478;
+  --subtle: #9b9288;
+  --mint: #de4f1f;
+  --mint-deep: #80351f;
+  --blue: #4c7f9f;
+  --blue-soft: #eaf3f5;
+  --gold: #c58a3a;
+  --red: #d96356;
+  --green-soft: #fff0e4;
   --red-soft: #fff0ef;
-  --gold-soft: #fff7e4;
+  --gold-soft: #fff0d8;
+  --cream: #fff8ef;
+  --ink: #22303a;
   font-family: "Inter", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -30,7 +32,8 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    linear-gradient(180deg, #eef8fb 0%, #f8fbfc 42%, #f4f8fa 100%);
+    radial-gradient(circle at 15% 0%, rgba(255, 229, 187, 0.55), transparent 34%),
+    linear-gradient(180deg, #fbf4ea 0%, #f7f4ee 44%, #f4f0e8 100%);
   color: var(--text);
   display: grid;
   place-items: start center;
@@ -586,6 +589,114 @@ h1 {
   border-color: #bdece4;
 }
 
+.calendar-filters {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 0 16px;
+  scrollbar-width: none;
+}
+
+.calendar-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.event-flat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.event-flat b,
+.event-flat i {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.event-flat b {
+  color: #41515a;
+  background: #f8efe3;
+}
+
+.event-flat i {
+  color: var(--mint-deep);
+  background: #edf7f1;
+}
+
+.inline-link {
+  color: var(--mint-deep);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(50, 105, 84, 0.34);
+}
+
+.replay-tile {
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  border-color: #eadcc9;
+  background: #fffdf9;
+}
+
+.course-cover {
+  min-height: 180px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+}
+
+.course-cover span {
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: #fff;
+  background: rgba(34, 48, 58, 0.52);
+  backdrop-filter: blur(8px);
+  font-size: 13px;
+}
+
+.replay-grid {
+  display: block;
+  column-count: 2;
+  column-gap: 18px;
+}
+
+.replay-grid .replay-tile {
+  break-inside: avoid;
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 18px;
+}
+
+.replay-tile .course-head,
+.replay-tile .tag-row {
+  padding-inline: 18px;
+}
+
+.replay-tile .tag-row {
+  padding-bottom: 10px;
+}
+
+.course-summary {
+  margin-top: 10px;
+  color: #88432a;
+  line-height: 1.6;
+}
+
+.course-link-row {
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px 18px;
+  color: var(--mint-deep);
+  font-size: 14px;
+}
+
 .course-head {
   display: flex;
   justify-content: space-between;
@@ -1078,7 +1189,8 @@ textarea:focus {
 
 .replay-modal,
 .confirm-modal,
-.rating-sheet {
+.rating-sheet,
+.course-detail-sheet {
   position: fixed;
   inset: 0;
   z-index: 25;
@@ -1092,7 +1204,8 @@ textarea:focus {
 
 .replay-modal.is-visible,
 .confirm-modal.is-visible,
-.rating-sheet.is-visible {
+.rating-sheet.is-visible,
+.course-detail-sheet.is-visible {
   display: flex;
 }
 
@@ -1121,6 +1234,60 @@ textarea:focus {
 .rating-sheet {
   align-items: flex-end;
   justify-content: center;
+}
+
+.course-detail-sheet {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.course-detail-panel {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: min(92vh, 900px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 28px 28px 0 0;
+  background: #fffdf9;
+  box-shadow: 0 -22px 70px rgba(37, 44, 49, 0.2);
+}
+
+.detail-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.detail-cover {
+  min-height: 300px;
+  background-size: cover;
+  background-position: center;
+}
+
+.detail-body {
+  padding: 24px;
+}
+
+.detail-body .eyebrow {
+  margin: 0 0 8px;
+}
+
+.detail-body h3 {
+  color: var(--ink);
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 500;
+}
+
+.detail-grid {
+  margin-top: 20px;
+}
+
+.review-list {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
 }
 
 .rating-sheet-panel {
@@ -1378,6 +1545,15 @@ textarea:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .replay-grid {
+    display: block;
+    column-count: 2;
+  }
+
+  .replay-grid .replay-tile {
+    display: inline-block;
+  }
+
   .course-card {
     display: flex;
     flex-direction: column;
@@ -1508,6 +1684,10 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
+  .replay-grid {
+    column-count: 1;
+  }
+
   .position-picker {
     display: grid;
     align-items: stretch;
@@ -1565,11 +1745,13 @@ textarea:focus {
 
   .replay-modal,
   .confirm-modal,
-  .rating-sheet {
+  .rating-sheet,
+  .course-detail-sheet {
     padding: 12px;
   }
 
-  .rating-sheet {
+  .rating-sheet,
+  .course-detail-sheet {
     padding: 0;
   }
 
@@ -1586,6 +1768,20 @@ textarea:focus {
 
   .rating-star {
     font-size: 30px;
+  }
+
+  .course-detail-panel {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .detail-cover {
+    min-height: 220px;
+  }
+
+  .detail-body {
+    padding: 18px;
   }
 
   .replay-dialog {

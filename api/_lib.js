@@ -103,6 +103,9 @@ function requireAdmin(req, res) {
 }
 
 function normalizeCourse(row) {
+  const coverUrl = row.cover_storage_key || row.has_cover_file
+    ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=cover`
+    : row.cover_url || "";
   const replayUrl = row.replay_storage_key || row.has_replay_file
     ? `/api/assets?courseId=${encodeURIComponent(row.id)}&type=replay`
     : row.replay_url || "";
@@ -120,8 +123,10 @@ function normalizeCourse(row) {
     scenarios: row.scenarios || [],
     teacher: row.teacher,
     liveUrl: row.live_url || "",
+    coverUrl,
     replayUrl,
     handbookUrl,
+    coverFileName: row.cover_file_name || "",
     replayFileName: row.replay_file_name || "",
     handbookFileName: row.handbook_file_name || "",
     form: row.form || "讲解",
@@ -152,6 +157,11 @@ async function ensureSchema() {
       scenarios jsonb not null default '[]'::jsonb,
       teacher text not null,
       live_url text,
+      cover_url text,
+      cover_file_name text,
+      cover_content_type text,
+      cover_data bytea,
+      cover_storage_key text,
       replay_url text,
       handbook_url text,
       replay_file_name text,
@@ -168,6 +178,11 @@ async function ensureSchema() {
       updated_at timestamptz not null default now()
     )
   `;
+  await sql`alter table courses add column if not exists cover_url text`;
+  await sql`alter table courses add column if not exists cover_file_name text`;
+  await sql`alter table courses add column if not exists cover_content_type text`;
+  await sql`alter table courses add column if not exists cover_data bytea`;
+  await sql`alter table courses add column if not exists cover_storage_key text`;
   await sql`alter table courses add column if not exists replay_file_name text`;
   await sql`alter table courses add column if not exists replay_content_type text`;
   await sql`alter table courses add column if not exists replay_data bytea`;
@@ -182,11 +197,13 @@ async function ensureSchema() {
       username text not null references users(username) on delete cascade,
       course_id text not null references courses(id) on delete cascade,
       watched_at timestamptz not null default now(),
+      replayed_at timestamptz,
       reminded_at timestamptz,
       downloaded_at timestamptz,
       unique(username, course_id)
     )
   `;
+  await sql`alter table user_records add column if not exists replayed_at timestamptz`;
   await sql`alter table user_records add column if not exists reminded_at timestamptz`;
   await sql`alter table user_records add column if not exists downloaded_at timestamptz`;
   await sql`
@@ -284,13 +301,13 @@ async function seedCourses(sql) {
     await sql`
       insert into courses (
         id, title, subtitle, positions, start_at, end_at, content, scenarios,
-        teacher, live_url, replay_url, handbook_url, form, status
+        teacher, live_url, cover_url, replay_url, handbook_url, form, status
       )
       values (
         ${course.id}, ${course.title}, ${course.subtitle}, ${JSON.stringify(course.positions)}::jsonb,
         ${course.startAt}, ${course.endAt}, ${JSON.stringify(course.content)}::jsonb,
         ${JSON.stringify(course.scenarios)}::jsonb, ${course.teacher}, ${course.liveUrl},
-        ${course.replayUrl}, ${course.handbookUrl}, ${course.form}, ${course.status}
+        ${course.coverUrl || ""}, ${course.replayUrl}, ${course.handbookUrl}, ${course.form}, ${course.status}
       )
       on conflict (id) do nothing
     `;

@@ -60,20 +60,21 @@
           <h3 id="calendarListTitle">本月直播安排</h3>
           <button class="ghost-button" id="clearDay" type="button">查看全月</button>
         </div>
+        <div class="calendar-filters" id="calendarFilters" aria-label="预约筛选">
+          <button class="filter-chip is-active" type="button" data-calendar-filter="all">全部</button>
+          <button class="filter-chip" type="button" data-calendar-filter="reserved">已预约</button>
+          <button class="filter-chip" type="button" data-calendar-filter="unreserved">未预约</button>
+        </div>
         <div class="event-list" id="eventList"></div>
       </section>
 
       <section class="view" id="squareView" aria-labelledby="tab-square">
         <div class="square-filter" id="squarePositionFilter" aria-label="岗位筛选"></div>
         <div class="section-title">
-          <h3>本期课程</h3>
+          <h3>课程回放</h3>
           <span id="upcomingCount"></span>
         </div>
-        <div class="course-list" id="upcomingCourses"></div>
-        <div class="section-title past-title">
-          <h3>往期回顾</h3>
-        </div>
-        <div class="course-list" id="pastCourses"></div>
+        <div class="course-list replay-grid" id="upcomingCourses"></div>
       </section>
 
       <section class="view" id="recordsView" aria-labelledby="tab-records">
@@ -86,6 +87,13 @@
             <span>累计时长</span>
             <strong id="learnedHours">0h</strong>
           </article>
+        </div>
+        <div class="section-title compact">
+          <h3>我的预约</h3>
+        </div>
+        <div class="record-list reservation-list" id="reservationList"></div>
+        <div class="section-title compact">
+          <h3>我的学习</h3>
         </div>
         <div class="record-list" id="recordList"></div>
       </section>
@@ -101,6 +109,7 @@
           <input id="editingCourseId" type="hidden" />
           <label>课程标题<input id="courseTitle" maxlength="60" required value="Kubernetes 日志定位与告警实战" /></label>
           <label>课程形式<input id="courseSubtitle" maxlength="40" required value="带领大家完成告警链路排查" /></label>
+          <label>课程封面链接<input id="coverUrl" type="url" placeholder="https://...（可选，也可在上传视频页上传封面）" /></label>
           <div class="field-group">
             <span>适用岗位</span>
             <div class="position-picker">
@@ -132,6 +141,7 @@
 
         <form class="manage-panel" id="assetFormPanel">
           <label>选择课程<select id="assetCourse"></select></label>
+          <label>课程封面图片<input id="coverFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/*" /></label>
           <label>回放视频文件<input id="replayFile" type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*" /></label>
           <label>知识手册 PDF<input id="handbookFile" type="file" accept="application/pdf" /></label>
           <p class="form-hint">文件将直传对象存储，数据库仅保存文件地址与元信息。</p>
@@ -164,6 +174,13 @@
           <button class="secondary-button" type="button" id="cancelDeleteCourse">取消</button>
           <button class="danger-button" type="button" id="confirmDeleteCourse">删除</button>
         </div>
+      </div>
+    </div>
+
+    <div class="course-detail-sheet" id="courseDetailSheet" aria-hidden="true">
+      <div class="course-detail-panel" role="dialog" aria-modal="true" aria-labelledby="courseDetailTitle">
+        <button class="icon-button detail-close" id="closeCourseDetail" type="button" aria-label="关闭">×</button>
+        <div id="courseDetailContent"></div>
       </div>
     </div>
 
