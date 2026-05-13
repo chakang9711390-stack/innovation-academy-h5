@@ -687,22 +687,20 @@ function courseMatchesPosition(course, position) {
 
 function renderCourseCard(course, issueIndex = 0) {
   const headline = course.content[0] || course.subtitle;
-  const contentText = course.content.slice(0, 2).join("，");
+  const coverThemes = ["#25385f", "#4a2507", "#233f12", "#3b1225", "#102f37", "#442d11"];
 
   return `
-    <article class="course-card replay-tile prototype-card" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}">
-      <div class="prototype-cover" ${coverStyle(course)}>
+    <article class="course-card replay-tile prototype-card" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
+      <div class="prototype-cover">
         <div class="prototype-cover-copy">
           <span>第${issueIndex}期</span>
           <strong>${headline}</strong>
         </div>
       </div>
       <div class="prototype-card-body">
-        <p class="strong-date">${formatFullTime(course)}</p>
         <h4>${course.title}</h4>
-        <p class="course-summary">${contentText}</p>
         <div class="tag-row">
-          ${course.positions.slice(0, 3).map((pos) => `<span class="tag">${pos}</span>`).join("")}
+          ${course.positions.slice(0, 2).map((pos) => `<span class="tag">${pos}</span>`).join("")}
         </div>
       </div>
     </article>

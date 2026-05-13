@@ -3323,3 +3323,128 @@ h1 {
     font-size: 32px;
   }
 }
+
+/* Course square prototype layout */
+#squareView.is-active {
+  padding: 20px 22px 32px;
+}
+
+#squareView .section-title {
+  display: none;
+}
+
+#squareView .square-filter {
+  margin: 0 0 16px;
+  padding: 0;
+  gap: 9px;
+}
+
+#squareView .square-filter .filter-chip {
+  min-height: 32px;
+  padding: 0 15px;
+  border-color: #e6c6b1;
+  border-radius: 999px;
+  background: #fffdf9;
+  color: #7c4b37;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+#squareView .square-filter .filter-chip.is-active {
+  color: #fff;
+  background: #c7542c;
+  border-color: #c7542c;
+}
+
+#squareView .replay-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#squareView .prototype-card {
+  display: block;
+  min-height: 0;
+  border: 1px solid #e7c3b0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fffdf9;
+  box-shadow: none;
+}
+
+#squareView .prototype-cover {
+  display: flex;
+  align-items: flex-end;
+  height: 120px;
+  min-height: 120px;
+  border: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.15)),
+    var(--course-cover-bg, #263b62);
+}
+
+#squareView .prototype-cover-copy {
+  width: 100%;
+  padding: 0 10px 10px;
+}
+
+#squareView .prototype-cover-copy span {
+  display: block;
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  padding: 4px 7px;
+  background: #c7542c;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+#squareView .prototype-cover-copy strong {
+  display: block;
+  width: 100%;
+  padding: 6px 7px 7px;
+  background: rgba(4, 8, 12, 0.88);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+#squareView .prototype-card-body {
+  padding: 12px 10px 13px;
+}
+
+#squareView .prototype-card-body h4 {
+  margin: 0;
+  color: #2d1710;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+#squareView .prototype-card-body .tag-row {
+  gap: 7px;
+  margin-top: 12px;
+}
+
+#squareView .prototype-card .tag {
+  border: 0;
+  border-radius: 5px;
+  padding: 5px 9px;
+  background: #fff3ea;
+  color: #b85c38;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  #squareView .replay-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  #squareView .replay-grid {
+    grid-template-columns: 1fr;
+  }
+}
