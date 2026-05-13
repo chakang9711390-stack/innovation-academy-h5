@@ -3520,9 +3520,9 @@ h1 {
 }
 
 #recordsView #reservationList.learning-card-grid {
-  grid-template-columns: repeat(2, 218px);
-  justify-content: start;
-  max-width: 448px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
+  max-width: none;
 }
 
 #recordsView #recordList.learning-card-grid {
@@ -3631,13 +3631,9 @@ h1 {
 }
 
 @media (max-width: 760px) {
+  #recordsView #reservationList.learning-card-grid,
   #recordsView #recordList.learning-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  #recordsView #reservationList.learning-card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-width: none;
   }
 }
 
