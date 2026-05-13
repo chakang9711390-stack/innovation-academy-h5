@@ -1317,13 +1317,14 @@ function getCoursePayload(published) {
     return null;
   }
   const lines = (id) => $(id).value.split("\n").map((line) => line.trim()).filter(Boolean);
+  const content = lines("#contentLines").slice(0, 5);
   return {
     title: $("#courseTitle").value.trim(),
-    subtitle: $("#courseSubtitle").value.trim(),
+    subtitle: content[0] || $("#courseTitle").value.trim(),
     positions,
     startAt: `${startAt}:00+08:00`,
     endAt: `${endAt}:00+08:00`,
-    content: lines("#contentLines").slice(0, 5),
+    content,
     scenarios: lines("#scenarioLines").slice(0, 8),
     teacher: $("#teacherName").value.trim(),
     liveUrl: $("#liveUrl").value.trim(),
@@ -1343,7 +1344,6 @@ function resetCourseForm() {
   $("#courseFormPanel").reset();
   $("#editingCourseId").value = "";
   $("#courseTitle").value = "";
-  $("#courseSubtitle").value = "";
   $("#coverUrl").value = "";
   $("#publishCoverFile").value = "";
   $$("#positionChecks input").forEach((input, index) => {
@@ -1368,7 +1368,6 @@ function resetCourseForm() {
 function fillCourseForm(course) {
   $("#editingCourseId").value = course.id;
   $("#courseTitle").value = course.title;
-  $("#courseSubtitle").value = course.subtitle;
   $("#coverUrl").value = course.coverUrl || "";
   $("#publishCoverFile").value = "";
   $$("#positionChecks input, #morePositionChecks input").forEach((input) => {
