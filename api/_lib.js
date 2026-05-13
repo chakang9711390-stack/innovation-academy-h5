@@ -228,6 +228,17 @@ async function ensureSchema() {
   await sql`alter table ratings add column if not exists completed_setup text`;
   await sql`alter table ratings add column if not exists comment text`;
   await sql`
+    create table if not exists notifications (
+      id text primary key,
+      course_id text references courses(id) on delete cascade,
+      title text not null,
+      body text not null,
+      kind text not null default 'course_reminder',
+      created_by text references users(username) on delete set null,
+      created_at timestamptz not null default now()
+    )
+  `;
+  await sql`
     insert into users (username, password_hash, role)
     values (${ADMIN_USERNAME}, ${hashPassword(ADMIN_PASSWORD)}, 'admin')
     on conflict (username) do nothing

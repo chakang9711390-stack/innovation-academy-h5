@@ -15,6 +15,7 @@ const state = {
   watched: new Set(),
   reminders: new Set(),
   messagesRead: false,
+  notifications: [],
   courses: [
     {
       id: "c1",
@@ -488,6 +489,13 @@ function renderReminderBadge() {
 }
 
 function buildMessages() {
+  const adminMessages = state.notifications.map((notification, index) => ({
+    tone: "alarm",
+    icon: "!",
+    title: notification.title,
+    body: notification.body,
+    time: formatNotificationTime(notification.createdAt, index),
+  }));
   const published = state.courses.filter((course) => course.published);
   const upcoming = published
     .filter((course) => getCourseRuntime(course) === "upcoming")
@@ -537,7 +545,16 @@ function buildMessages() {
     });
   });
 
-  return messages;
+  return [...adminMessages, ...messages];
+}
+
+function formatNotificationTime(value, fallbackIndex = 0) {
+  if (!value) return fallbackIndex ? "刚刚" : "刚刚";
+  const diff = Date.now() - new Date(value).getTime();
+  if (!Number.isFinite(diff) || diff < 60_000) return "刚刚";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}分钟前`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}小时前`;
+  return `${Math.floor(diff / 86_400_000)}天前`;
 }
 
 function renderMessages() {
@@ -1261,10 +1278,18 @@ async function loadRecords() {
   renderReminderBadge();
 }
 
+async function loadNotifications() {
+  if (!state.token) return;
+  const data = await apiFetch("/api/notifications");
+  state.notifications = data.notifications || [];
+  renderReminderBadge();
+}
+
 async function loadAppData() {
   try {
     await loadCourses();
     await loadRecords();
+    await loadNotifications();
     renderCalendar();
     renderCourses();
     renderRecords();
@@ -1752,7 +1777,26 @@ function bindEvents() {
       return;
     }
     if (button.dataset.adminAction === "message") {
-      openMessageDrawer();
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = "发送中";
+      try {
+        const data = await apiFetch("/api/notifications", {
+          method: "POST",
+          body: JSON.stringify({ courseId: course.id }),
+        });
+        if (data.notification) {
+          state.notifications = [data.notification, ...state.notifications.filter((item) => item.id !== data.notification.id)];
+        }
+        state.messagesRead = false;
+        renderReminderBadge();
+        showToast(`已发送《${course.title}》提醒给学员`);
+      } catch (error) {
+        showToast(error.message || "提醒发送失败");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
       return;
     }
     if (button.dataset.adminAction === "reviews") {
