@@ -3415,14 +3415,21 @@ h1 {
 }
 
 #squareView .square-more-position-menu {
-  right: auto;
-  left: 0;
+  right: 0;
+  left: auto;
   top: calc(100% + 10px);
   z-index: 8;
-  width: min(520px, calc(100vw - 44px));
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(470px, calc(100vw - 48px));
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 4px 14px;
+  padding: 12px;
   border-color: #e6c6b1;
   box-shadow: 0 20px 45px rgba(82, 43, 24, 0.12);
+}
+
+#squareView .square-more-position-menu .position-menu-item span {
+  white-space: nowrap;
+  padding-right: 8px;
 }
 
 #squareView .replay-grid {
@@ -3510,10 +3517,33 @@ h1 {
   #squareView .replay-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  #squareView .square-more-position-menu {
+    right: auto;
+    left: 0;
+    width: min(420px, calc(100vw - 44px));
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
 }
 
 @media (max-width: 520px) {
   #squareView .replay-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #squareView .square-filter {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  #squareView .square-more-position-menu {
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    top: 156px;
+    width: auto;
+    max-height: 60vh;
+    overflow-y: auto;
     grid-template-columns: 1fr;
   }
 }
