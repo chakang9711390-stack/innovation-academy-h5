@@ -8,6 +8,8 @@ const state = {
   selectedDate: "",
   calendarFilter: "all",
   positionFilter: "全部",
+  extraPositionFilters: new Set(),
+  squareMorePositionsVisible: false,
   recordMode: "reservations",
   ratingDraft: {},
   ratings: {},
@@ -692,17 +694,35 @@ function renderCourses() {
 }
 
 function renderSquarePositionFilter() {
-  const options = ["全部", "研发", "产品", "运营", "财务", "数据", "HR"];
-  $("#squarePositionFilter").innerHTML = options
-    .map((position) => `<button class="filter-chip ${state.positionFilter === position ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`)
-    .join("");
+  const mainPositions = ["运维", "研发", "测试", "产品"];
+  const morePositions = POSITION_OPTIONS.filter((position) => !mainPositions.includes(position));
+  const extraCount = state.extraPositionFilters.size;
+  $("#squarePositionFilter").innerHTML = `
+    <button class="filter-chip ${state.positionFilter === "全部" && !extraCount ? "is-active" : ""}" type="button" data-position-filter="全部">全部</button>
+    ${mainPositions.map((position) => `<button class="filter-chip ${state.positionFilter === position ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`).join("")}
+    <span class="square-more-wrap">
+      <button class="filter-chip more-positions ${state.squareMorePositionsVisible ? "is-open" : ""}" id="toggleSquareMorePositions" type="button" aria-expanded="${state.squareMorePositionsVisible}">
+        ${extraCount ? `更多岗位（${extraCount}）` : "更多岗位"}
+      </button>
+      <span class="more-position-menu square-more-position-menu" id="squareMorePositionChecks" ${state.squareMorePositionsVisible ? "" : "hidden"}>
+        ${morePositions.map((position) => `
+          <label class="position-menu-item ${state.extraPositionFilters.has(position) ? "is-selected" : ""}">
+            <input type="checkbox" value="${position}" ${state.extraPositionFilters.has(position) ? "checked" : ""} data-square-extra-position />
+            <span>${position}</span>
+          </label>
+        `).join("")}
+      </span>
+    </span>
+  `;
 }
 
 function courseMatchesPosition(course, position) {
-  if (position === "全部") return true;
-  if (position === "数据") return course.positions.some((item) => item.includes("数据") || item.includes("算法"));
-  if (position === "研发") return course.positions.some((item) => item.includes("研发") || item.includes("算法") || item.includes("测试") || item.includes("运维"));
-  return course.positions.some((item) => item.includes(position));
+  const selected = [
+    ...(position && position !== "全部" ? [position] : []),
+    ...state.extraPositionFilters,
+  ];
+  if (!selected.length) return true;
+  return selected.some((target) => course.positions.some((item) => item === target || item.includes(target) || target.includes(item)));
 }
 
 function renderCourseCard(course, issueIndex = 0) {
@@ -956,11 +976,12 @@ function renderRatingPage(course) {
   const detail = myRatingDetail(course.id);
   const readonly = Boolean(state.ratings[course.id]);
   const teacher = course.teacher.split("-").pop();
+  const intro = renderRatingCourseIntro(course);
   if (readonly) {
     return `
       <article class="rating-page-card">
-        <h3>AI培训课堂第4期 · 评分表</h3>
-        <p class="rating-course">${course.subtitle}：${course.content.join("，")}。适用于${course.scenarios.join("、")}。</p>
+        <h3>${course.title}</h3>
+        ${intro}
         ${renderReadonlyRatingField("对 AI 直播课堂的整体打分", detail?.score || state.ratings[course.id])}
         ${renderReadonlyRatingField("你认为本堂课老师讲解是否清晰完整，对你的工作有帮助？", detail?.clarityScore || detail?.score || state.ratings[course.id])}
         ${renderReadonlyChoiceField("本次课程内容难度如何？", detail?.difficulty || "未填写")}
@@ -975,8 +996,8 @@ function renderRatingPage(course) {
   }
   return `
     <article class="rating-page-card">
-      <h3>AI培训课堂第4期 · 评分表</h3>
-      <p class="rating-course">${course.subtitle}：${course.content.join("，")}。适用于${course.scenarios.join("、")}。</p>
+      <h3>${course.title}</h3>
+      ${intro}
       <form id="pageRatingForm" class="rating-form">
         <input id="pageRatingCourseId" type="hidden" />
         ${renderEditableRatingField("对 AI 直播课堂的整体打分", "pageRatingOverall", true)}
@@ -1003,6 +1024,19 @@ function renderRatingPage(course) {
         <button class="rating-submit-button" type="submit">✈ 提交评价</button>
       </form>
     </article>
+  `;
+}
+
+function renderRatingCourseIntro(course) {
+  return `
+    <section class="rating-course">
+      <h4>${course.subtitle || course.content[0] || ""}</h4>
+      <p class="rating-time">◷ ${formatFullTime(course)}</p>
+      <div class="tag-row">${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}</div>
+      <hr />
+      <strong>课程内容</strong>
+      <ul>${course.content.map((item) => `<li>${item}</li>`).join("")}</ul>
+    </section>
   `;
 }
 
@@ -1617,9 +1651,27 @@ function bindEvents() {
   });
 
   $("#squarePositionFilter").addEventListener("click", (event) => {
+    const moreButton = event.target.closest("#toggleSquareMorePositions");
+    if (moreButton) {
+      state.squareMorePositionsVisible = !state.squareMorePositionsVisible;
+      renderSquarePositionFilter();
+      return;
+    }
     const button = event.target.closest("[data-position-filter]");
     if (!button) return;
     state.positionFilter = button.dataset.positionFilter;
+    state.extraPositionFilters.clear();
+    renderCourses();
+  });
+  $("#squarePositionFilter").addEventListener("change", (event) => {
+    const input = event.target.closest("[data-square-extra-position]");
+    if (!input) return;
+    if (input.checked) {
+      state.extraPositionFilters.add(input.value);
+    } else {
+      state.extraPositionFilters.delete(input.value);
+    }
+    state.positionFilter = "全部";
     renderCourses();
   });
 
@@ -1689,6 +1741,10 @@ function bindEvents() {
 
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".position-picker")) setMorePositionsVisible(false);
+    if (!event.target.closest("#squarePositionFilter") && state.squareMorePositionsVisible) {
+      state.squareMorePositionsVisible = false;
+      renderSquarePositionFilter();
+    }
   });
 
   $("#assetCourse").addEventListener("change", updateAssetStatus);

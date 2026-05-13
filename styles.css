@@ -1994,6 +1994,45 @@ textarea:focus {
   line-height: 1.7;
 }
 
+.rating-course h4 {
+  margin: 0 0 8px;
+  color: #9b583f;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.rating-course .rating-time {
+  margin: 0 0 14px;
+  color: #c46c51;
+}
+
+.rating-course .tag-row {
+  margin: 0 0 18px;
+}
+
+.rating-course hr {
+  border: 0;
+  border-top: 1px solid #efc7b5;
+  margin: 18px 0;
+}
+
+.rating-course strong {
+  display: block;
+  margin-bottom: 12px;
+  color: #9b705e;
+}
+
+.rating-course ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #2d1710;
+  line-height: 1.9;
+}
+
+.rating-course li::marker {
+  color: #c9552c;
+}
+
 .rating-form {
   display: grid;
   gap: 16px;
@@ -3334,9 +3373,12 @@ h1 {
 }
 
 #squareView .square-filter {
+  position: relative;
   margin: 0 0 16px;
   padding: 0;
   gap: 9px;
+  align-items: flex-start;
+  overflow: visible;
 }
 
 #squareView .square-filter .filter-chip {
@@ -3354,6 +3396,33 @@ h1 {
   color: #fff;
   background: #c7542c;
   border-color: #c7542c;
+}
+
+#squareView .square-more-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+#squareView .square-filter .more-positions {
+  padding-right: 34px;
+}
+
+#squareView .square-filter .more-positions.is-open,
+#squareView .square-filter .more-positions[aria-expanded="true"] {
+  color: #7c4b37;
+  background: #fffdf9;
+  border-color: #e6c6b1;
+}
+
+#squareView .square-more-position-menu {
+  right: auto;
+  left: 0;
+  top: calc(100% + 10px);
+  z-index: 8;
+  width: min(520px, calc(100vw - 44px));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-color: #e6c6b1;
+  box-shadow: 0 20px 45px rgba(82, 43, 24, 0.12);
 }
 
 #squareView .replay-grid {
