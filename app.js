@@ -4,8 +4,8 @@ const state = {
   token: "",
   authMode: "login",
   activeTab: "calendar",
-  month: new Date(2026, 3, 1),
-  selectedDate: "2026-04-30",
+  month: new Date(2026, 4, 1),
+  selectedDate: "",
   calendarFilter: "all",
   positionFilter: "全部",
   recordMode: "reservations",
@@ -598,6 +598,7 @@ function renderEventList() {
   renderCalendarFilters();
   const events = state.courses
     .filter((course) => course.published)
+    .filter((course) => course.startAt.slice(0, 7) === monthKey(state.month))
     .filter((course) => {
       if (state.calendarFilter === "reserved") return state.reminders.has(course.id);
       if (state.calendarFilter === "unreserved") return !state.reminders.has(course.id);
@@ -605,7 +606,7 @@ function renderEventList() {
     })
     .sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
-  $("#calendarListTitle").textContent = "直播日历";
+  $("#calendarListTitle").textContent = `${state.month.getFullYear()}年 ${state.month.getMonth() + 1}月`;
   $("#clearDay").style.display = "none";
 
   if (!events.length) {
@@ -617,7 +618,16 @@ function renderEventList() {
 }
 
 function renderCalendarFilters() {
+  const monthCourses = state.courses.filter((course) => course.published && course.startAt.slice(0, 7) === monthKey(state.month));
+  const reservedCount = monthCourses.filter((course) => state.reminders.has(course.id)).length;
+  const unreservedCount = monthCourses.length - reservedCount;
+  const labels = {
+    all: `全部 (${monthCourses.length})`,
+    reserved: `已预约 (${reservedCount})`,
+    unreserved: `未预约 (${unreservedCount})`,
+  };
   $$("#calendarFilters [data-calendar-filter]").forEach((button) => {
+    button.textContent = labels[button.dataset.calendarFilter];
     button.classList.toggle("is-active", button.dataset.calendarFilter === state.calendarFilter);
   });
 }
@@ -626,27 +636,28 @@ function renderEventCard(course) {
   const start = parseDate(course.startAt);
   const status = getCourseRuntime(course);
   const reminded = state.reminders.has(course.id);
+  const dateText = `${start.getMonth() + 1} 月 ${start.getDate()} 日（${weekday(start)}） ${course.startAt.slice(11, 16)}-${course.endAt.slice(11, 16)}`;
   return `
-    <article class="event-card timeline-course ${status === "ended" ? "is-ended" : ""}" data-course="${course.id}">
+    <article class="event-card timeline-course" data-course="${course.id}">
       <span class="timeline-dot" aria-hidden="true"></span>
-      <span class="course-thumb" ${coverStyle(course)}></span>
       <span class="event-body">
-        <p class="meta strong-date">${formatFullTime(course)}</p>
         <h4>${course.title}</h4>
-        <p class="course-subtitle">${course.subtitle}</p>
-        <span class="tag-row">
-          ${course.positions.map((pos) => `<span class="tag">${pos}</span>`).join("")}
-          <span class="status ${status}">${statusLabel(status)}</span>
-        </span>
-        <span class="event-flat">
-          ${course.content.map((item) => `<b>${item}</b>`).join("")}
-        </span>
-        <span class="event-card-actions">
-          ${course.liveUrl ? `<a class="inline-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">会议链接</a>` : ""}
-          ${reminded ? `<em>提前1天 · 提前1小时提醒</em>` : ""}
-        </span>
+        ${status === "upcoming" ? `<span class="calendar-status">即将开播</span>` : ""}
+        <p class="meta strong-date">${dateText}</p>
+        <div class="tag-row">${course.positions.slice(0, 3).map((pos) => `<span class="tag">${pos}</span>`).join("")}</div>
+        <div class="calendar-detail-block">
+          <strong>课程内容</strong>
+          <ul>${course.content.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+        <div class="calendar-detail-block">
+          <strong>适用场景</strong>
+          <ul class="scenario-list">${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
+        </div>
+        <div class="event-card-actions">
+          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">加入 Lark 会议</a>` : `<span></span>`}
+          <button class="calendar-reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>
+        </div>
       </span>
-      ${status === "ended" ? "" : `<button class="primary-button reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>`}
     </article>
   `;
 }
@@ -1485,6 +1496,7 @@ function bindEvents() {
 
   $("#eventList").addEventListener("click", (event) => {
     if (event.target.closest("[data-action]")) return;
+    if (event.target.closest("a")) return;
     const card = event.target.closest("[data-course]");
     if (!card) return;
     switchTab("square");

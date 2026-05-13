@@ -625,6 +625,197 @@ h1 {
   display: none;
 }
 
+#calendarView.is-active {
+  padding: 20px 22px 30px;
+}
+
+#calendarView .calendar-panel {
+  display: none;
+}
+
+#calendarView .section-title {
+  padding: 8px 26px 12px;
+}
+
+#calendarView .section-title h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #6d2f1d;
+}
+
+#calendarView .calendar-filters {
+  padding: 0 0 18px;
+}
+
+#calendarView .filter-chip {
+  padding: 8px 15px;
+  border-color: #e5c1ad;
+  color: #8a4a35;
+  background: #fffdf9;
+}
+
+#calendarView .filter-chip.is-active {
+  background: #c7542c;
+  border-color: #c7542c;
+  color: #fff;
+}
+
+#calendarView .event-list {
+  position: relative;
+  gap: 14px;
+  padding-left: 26px;
+}
+
+#calendarView .event-list::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  bottom: 0;
+  width: 1px;
+  background: #e6c6b1;
+}
+
+#calendarView .event-card {
+  position: relative;
+  display: block;
+  padding: 16px 18px;
+  border-color: #e9bfa8;
+  border-radius: 10px;
+  background: #fffdf9;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+#calendarView .timeline-dot {
+  position: absolute;
+  left: -24px;
+  top: 22px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #f8e8df;
+  background: #cf5c34;
+  box-shadow: none;
+}
+
+#calendarView .event-body {
+  display: block;
+  position: relative;
+}
+
+#calendarView .event-body h4 {
+  padding-right: 92px;
+  font-size: 17px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #241510;
+}
+
+.calendar-status {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-radius: 5px;
+  padding: 5px 9px;
+  background: #fde9e4;
+  color: #c7542c;
+  font-size: 12px;
+}
+
+.calendar-status::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+}
+
+#calendarView .strong-date {
+  margin-top: 12px;
+  color: #bd7b65;
+  font-size: 13px;
+}
+
+#calendarView .tag-row {
+  margin-top: 9px;
+}
+
+#calendarView .tag {
+  border-radius: 5px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+.calendar-detail-block {
+  margin-top: 16px;
+}
+
+.calendar-detail-block strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #a16c5a;
+  font-size: 12px;
+}
+
+.calendar-detail-block ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #321d15;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.calendar-detail-block li::before {
+  content: "·";
+  margin-right: 8px;
+  color: #c7542c;
+  font-weight: 700;
+}
+
+.calendar-detail-block .scenario-list li::before {
+  content: "✓";
+}
+
+#calendarView .event-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e9c7b5;
+}
+
+.calendar-live-link {
+  color: #c7542c;
+  border-bottom: 0;
+  font-weight: 600;
+}
+
+.calendar-live-link::before {
+  content: "▹";
+  margin-right: 6px;
+}
+
+.calendar-reserve-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 9px 16px;
+  color: #fff;
+  background: #7d3d27;
+  font-weight: 600;
+}
+
+.calendar-reserve-button.is-reminded {
+  background: #7d3d27;
+}
+
 .event-flat {
   display: flex;
   flex-wrap: wrap;
