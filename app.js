@@ -818,12 +818,13 @@ function renderRecords() {
 
 function renderLearningCourseCard(course, { type, issueIndex }) {
   const rating = state.ratings[course.id] || 0;
+  const coverThemes = ["#25385f", "#4a2507", "#233f12", "#3b1225", "#102f37", "#442d11"];
   const action = type === "reservation"
-    ? `<button class="learning-card-action" type="button" data-action="cancelReminder" data-course="${course.id}">↩ 取消预约</button>`
-    : `<button class="learning-card-action ${rating ? "is-rated" : ""}" type="button" data-action="openRating" data-course="${course.id}">${rating ? "查看评价" : "☆ 点评"}</button>`;
+    ? `<button class="learning-card-action" type="button" data-action="cancelReminder" data-course="${course.id}">取消预约</button>`
+    : `<button class="learning-card-action ${rating ? "is-rated" : ""}" type="button" data-action="openRating" data-course="${course.id}">${rating ? "查看评价" : "点评"}</button>`;
   return `
-    <article class="learning-course-card">
-      <div class="prototype-cover" ${coverStyle(course)}>
+    <article class="learning-course-card" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
+      <div class="prototype-cover">
         <div class="prototype-cover-copy">
           <span>第${issueIndex}期</span>
           <strong>${course.content[0] || course.subtitle}</strong>

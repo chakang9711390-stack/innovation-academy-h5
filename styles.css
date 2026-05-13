@@ -3448,3 +3448,197 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+/* Learning record prototype layout */
+#recordsView.is-active {
+  padding: 20px 22px 32px;
+}
+
+#recordsView .learning-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin-bottom: 16px;
+  padding: 4px;
+  border: 1px solid #efc7b5;
+  border-radius: 12px;
+  background: #fff2df;
+}
+
+#recordsView .learning-tab {
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #7c4b37;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#recordsView .learning-tab.is-active {
+  color: #fff;
+  background: #c9552c;
+}
+
+#recordsView #learningStats.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+#recordsView #learningStats[hidden],
+#recordsView .record-list[hidden] {
+  display: none;
+}
+
+#recordsView #learningStats .stat-card {
+  padding: 16px;
+  border-color: #efc7b5;
+  border-radius: 10px;
+  background: #fffdfa;
+  box-shadow: none;
+}
+
+#recordsView #learningStats .stat-card strong {
+  margin: 0;
+  color: #c9552c;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+#recordsView #learningStats .stat-card span {
+  display: block;
+  margin-top: 4px;
+  color: #bd806d;
+  font-size: 13px;
+}
+
+#recordsView .learning-card-grid {
+  display: grid;
+  gap: 12px;
+}
+
+#recordsView #reservationList.learning-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#recordsView #recordList.learning-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#recordsView .learning-course-card {
+  overflow: hidden;
+  border: 1px solid #efc7b5;
+  border-radius: 9px;
+  background: #fffdfa;
+  box-shadow: none;
+}
+
+#recordsView .learning-course-card .prototype-cover {
+  display: flex;
+  align-items: flex-end;
+  height: 118px;
+  min-height: 118px;
+  border: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.15)),
+    var(--course-cover-bg, #263b62);
+}
+
+#recordsView .learning-course-card .prototype-cover-copy {
+  width: 100%;
+  padding: 0 10px 10px;
+}
+
+#recordsView .learning-course-card .prototype-cover-copy span {
+  display: block;
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  padding: 4px 7px;
+  color: #fff;
+  background: #c7542c;
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+#recordsView .learning-course-card .prototype-cover-copy strong {
+  display: block;
+  width: 100%;
+  padding: 6px 7px 7px;
+  color: #fff;
+  background: rgba(4, 8, 12, 0.88);
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+#recordsView .learning-course-body {
+  min-height: 76px;
+  padding: 12px;
+}
+
+#recordsView .learning-course-body h4 {
+  margin: 0;
+  color: #2c1710;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+#recordsView .learning-course-body .tag-row {
+  margin-top: 12px;
+}
+
+#recordsView .learning-course-body .tag {
+  border: 0;
+  border-radius: 5px;
+  padding: 5px 9px;
+  background: #fff3ea;
+  color: #b85c38;
+  font-size: 12px;
+}
+
+#recordsView .learning-course-footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #efc7b5;
+  padding: 10px;
+}
+
+#recordsView .learning-card-action {
+  width: auto;
+  min-width: 86px;
+  border: 0;
+  border-radius: 7px;
+  background: #982923;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#recordsView #recordList .learning-card-action {
+  width: 100%;
+  background: #c9552c;
+}
+
+#recordsView #recordList .learning-card-action.is-rated {
+  background: #71351f;
+}
+
+@media (max-width: 760px) {
+  #recordsView #reservationList.learning-card-grid,
+  #recordsView #recordList.learning-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  #recordsView #reservationList.learning-card-grid,
+  #recordsView #recordList.learning-card-grid,
+  #recordsView #learningStats.stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
