@@ -234,10 +234,13 @@ async function ensureSchema() {
       title text not null,
       body text not null,
       kind text not null default 'course_reminder',
+      trigger_key text,
       created_by text references users(username) on delete set null,
       created_at timestamptz not null default now()
     )
   `;
+  await sql`alter table notifications add column if not exists trigger_key text`;
+  await sql`create unique index if not exists notifications_trigger_key_idx on notifications(trigger_key) where trigger_key is not null`;
   await sql`
     insert into users (username, password_hash, role)
     values (${ADMIN_USERNAME}, ${hashPassword(ADMIN_PASSWORD)}, 'admin')

@@ -1,0 +1,14 @@
+name: Course reminder notifications
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate due course reminders
+        run: |
+          curl -fsS "https://innovation-academy-h5.vercel.app/api/notifications-cron"

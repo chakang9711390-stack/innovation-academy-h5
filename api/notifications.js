@@ -25,6 +25,37 @@ function normalizeNotification(row) {
   };
 }
 
+async function createAutomaticNotifications(sql, now = new Date()) {
+  const courses = await sql`
+    select id, title, start_at, end_at
+    from courses
+    where status = 'published'
+      and start_at > now()
+      and start_at <= now() + interval '2 hours 5 minutes'
+    order by start_at asc
+  `;
+  let createdCount = 0;
+  for (const course of courses) {
+    const start = new Date(course.start_at).getTime();
+    for (const hoursBefore of [2, 1]) {
+      const dueAt = start - hoursBefore * 60 * 60 * 1000;
+      if (now.getTime() < dueAt || now.getTime() >= start) continue;
+      const triggerKey = `${course.id}:before_${hoursBefore}h`;
+      const id = makeId();
+      const title = `${course.title} — 开播提醒`;
+      const body = `课程将于 ${formatCourseTime(course)} 准时发车，麻烦大家帮忙转发，十分感谢！`;
+      const result = await sql`
+        insert into notifications (id, course_id, title, body, kind, trigger_key)
+        values (${id}, ${course.id}, ${title}, ${body}, 'course_auto_reminder', ${triggerKey})
+        on conflict (trigger_key) where trigger_key is not null do nothing
+        returning id
+      `;
+      if (result.length) createdCount += 1;
+    }
+  }
+  return createdCount;
+}
+
 module.exports = async function handler(req, res) {
   try {
     await ensureSchema();
@@ -32,6 +63,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "GET") {
       if (!requireUser(req, res)) return;
+      await createAutomaticNotifications(sql);
       const rows = await sql`
         select id, course_id, title, body, kind, created_at
         from notifications
@@ -62,7 +94,7 @@ module.exports = async function handler(req, res) {
       const id = makeId();
       await sql`
         insert into notifications (id, course_id, title, body, kind, created_by)
-        values (${id}, ${courseId}, ${title}, ${bodyText}, 'course_reminder', ${admin.username})
+        values (${id}, ${courseId}, ${title}, ${bodyText}, 'course_manual_reminder', ${admin.username})
       `;
       const created = await sql`
         select id, course_id, title, body, kind, created_at
@@ -78,3 +110,5 @@ module.exports = async function handler(req, res) {
     json(res, 500, { error: error.message || "通知服务异常" });
   }
 };
+
+module.exports.createAutomaticNotifications = createAutomaticNotifications;
