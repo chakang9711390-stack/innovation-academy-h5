@@ -1653,12 +1653,14 @@ function bindEvents() {
   $("#squarePositionFilter").addEventListener("click", (event) => {
     const moreButton = event.target.closest("#toggleSquareMorePositions");
     if (moreButton) {
+      event.stopPropagation();
       state.squareMorePositionsVisible = !state.squareMorePositionsVisible;
       renderSquarePositionFilter();
       return;
     }
     const button = event.target.closest("[data-position-filter]");
     if (!button) return;
+    event.stopPropagation();
     state.positionFilter = button.dataset.positionFilter;
     state.extraPositionFilters.clear();
     renderCourses();
@@ -1666,6 +1668,7 @@ function bindEvents() {
   $("#squarePositionFilter").addEventListener("change", (event) => {
     const input = event.target.closest("[data-square-extra-position]");
     if (!input) return;
+    event.stopPropagation();
     if (input.checked) {
       state.extraPositionFilters.add(input.value);
     } else {
