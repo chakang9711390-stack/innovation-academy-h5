@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
         return;
       }
       const title = `${course.title} — 开播提醒`;
-      const bodyText = `课程将于 ${formatCourseTime(course)} 开播，请提前加入直播间。`;
+      const bodyText = `课程将于 ${formatCourseTime(course)} 准时发车，麻烦大家帮忙转发，十分感谢！`;
       const id = makeId();
       await sql`
         insert into notifications (id, course_id, title, body, kind, created_by)

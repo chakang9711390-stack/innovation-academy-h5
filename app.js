@@ -489,13 +489,16 @@ function renderReminderBadge() {
 }
 
 function buildMessages() {
-  const adminMessages = state.notifications.map((notification, index) => ({
-    tone: "alarm",
-    icon: "!",
-    title: notification.title,
-    body: notification.body,
-    time: formatNotificationTime(notification.createdAt, index),
-  }));
+  const adminMessages = state.notifications.map((notification, index) => {
+    const course = state.courses.find((item) => item.id === notification.courseId);
+    return {
+      tone: "alarm",
+      icon: "!",
+      title: notification.title,
+      body: course ? `课程将于 ${formatFullTime(course)} 准时发车，麻烦大家帮忙转发，十分感谢！` : notification.body,
+      time: formatNotificationTime(notification.createdAt, index),
+    };
+  });
   const published = state.courses.filter((course) => course.published);
   const upcoming = published
     .filter((course) => getCourseRuntime(course) === "upcoming")
@@ -510,7 +513,7 @@ function buildMessages() {
       tone: "alarm",
       icon: "!",
       title: `${course.title} — 开播提醒`,
-      body: `课程将于 ${formatFullTime(course)} 开播，请提前加入直播间`,
+      body: `课程将于 ${formatFullTime(course)} 准时发车，麻烦大家帮忙转发，十分感谢！`,
       time: index === 0 ? "1小时前" : "提前1天通知",
     });
   });
