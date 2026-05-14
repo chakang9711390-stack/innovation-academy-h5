@@ -386,12 +386,12 @@ function markCourseRecorded(courseId, action) {
   apiFetch("/api/records", { method: "POST", body: JSON.stringify({ action, courseId }) }).catch((error) => showToast(error.message));
 }
 
-function setCurrentUser(user, token) {
+function setCurrentUser(user, token, renderOptions) {
   state.currentUser = { username: user.username, role: user.role };
   state.token = token;
   state.isAdmin = user.role === "admin";
   localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ user: state.currentUser, token }));
-  renderAuthState();
+  renderAuthState(renderOptions);
 }
 
 function clearCurrentUser() {
@@ -418,7 +418,7 @@ function restoreSession() {
   }
 }
 
-function renderAuthState() {
+function renderAuthState(options = {}) {
   const isLoggedIn = Boolean(state.currentUser);
   $("#authScreen").classList.toggle("is-hidden", isLoggedIn);
   $(".app-shell").classList.toggle("is-locked", !isLoggedIn);
@@ -426,6 +426,7 @@ function renderAuthState() {
   renderTabs();
   $$(".view").forEach((view) => view.classList.remove("is-active"));
   $(`#${state.activeTab}View`).classList.add("is-active");
+  if (options.skipActiveRender) return;
   if (state.activeTab === "records") renderRecords();
   if (state.activeTab === "manage") renderAssetOptions();
 }
@@ -454,9 +455,9 @@ async function handleAuthSubmit() {
       method: "POST",
       body: JSON.stringify({ mode: state.authMode, username, password, confirmPassword }),
     });
-    setCurrentUser(data.user, data.token);
+    setCurrentUser(data.user, data.token, { skipActiveRender: true });
     showToast(state.authMode === "register" ? "注册成功，已登录" : data.user.role === "admin" ? "管理员登录成功" : "登录成功");
-    loadAppData();
+    await loadAppData();
   } catch (error) {
     showToast(error.message);
   }
@@ -1930,17 +1931,20 @@ function bindEvents() {
 async function init() {
   restoreSession();
   renderTabs();
+  renderPositionChecks();
+  renderReminderBadge();
+  renderAuthMode();
+  bindEvents();
+  renderAuthState({ skipActiveRender: Boolean(state.currentUser) });
+  if (state.currentUser) {
+    await loadAppData();
+    return;
+  }
   renderCalendar();
   renderCourses();
   renderRecords();
-  renderPositionChecks();
-  renderReminderBadge();
   renderAssetOptions();
   renderAdminCourseList();
-  renderAuthMode();
-  renderAuthState();
-  bindEvents();
-  if (state.currentUser) await loadAppData();
 }
 
 init();
