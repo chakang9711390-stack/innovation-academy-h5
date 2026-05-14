@@ -1,0 +1,20 @@
+{
+  "appId": "com.innovation.academy",
+  "appName": "创新学院",
+  "webDir": "www",
+  "server": {
+    "url": "https://innovation-academy-h5.vercel.app",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#c7542c"
+    }
+  }
+}
