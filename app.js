@@ -101,6 +101,7 @@ const tabs = [
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const AUTH_SESSION_KEY = "innovation-academy-session";
+const COURSE_CACHE_KEY = "innovation-academy-courses-cache";
 const POSITION_OPTIONS = [
   "运维",
   "后端研发",
@@ -1304,6 +1305,7 @@ function updateAssetStatus() {
 async function loadCourses() {
   const data = await apiFetch("/api/courses");
   state.courses = data.courses;
+  localStorage.setItem(COURSE_CACHE_KEY, JSON.stringify({ courses: state.courses, updatedAt: Date.now() }));
 }
 
 async function loadRecords() {
@@ -1323,16 +1325,34 @@ async function loadNotifications() {
   renderReminderBadge();
 }
 
+function restoreCachedCourses() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(COURSE_CACHE_KEY) || "null");
+    if (!Array.isArray(cached?.courses) || !cached.courses.length) return false;
+    state.courses = cached.courses;
+    return true;
+  } catch {
+    localStorage.removeItem(COURSE_CACHE_KEY);
+    return false;
+  }
+}
+
+function renderAppDataViews() {
+  renderCalendar();
+  renderCourses();
+  renderRecords();
+  renderAssetOptions();
+  renderAdminCourseList();
+}
+
 async function loadAppData() {
   try {
+    const recordsPromise = loadRecords().catch((error) => showToast(error.message || "学习记录加载失败，请重试"));
     await loadCourses();
-    await loadRecords();
-    await loadNotifications();
-    renderCalendar();
-    renderCourses();
-    renderRecords();
-    renderAssetOptions();
-    renderAdminCourseList();
+    renderAppDataViews();
+    await recordsPromise;
+    renderAppDataViews();
+    loadNotifications().catch((error) => showToast(error.message || "消息加载失败，请重试"));
   } catch (error) {
     showToast(error.message || "加载失败，请重试");
   }
@@ -1950,6 +1970,7 @@ async function init() {
   bindEvents();
   renderAuthState({ skipActiveRender: Boolean(state.currentUser) });
   if (state.currentUser) {
+    if (restoreCachedCourses()) renderAppDataViews();
     await loadAppData();
     return;
   }

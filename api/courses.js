@@ -16,14 +16,22 @@ function makeId() {
 
 module.exports = async function handler(req, res) {
   try {
-    await ensureSchema();
     const sql = getSql();
 
     if (req.method === "GET") {
-      const rows = await sql.query(`select ${COURSE_SELECT} from courses order by start_at asc`);
+      let rows;
+      try {
+        rows = await sql.query(`select ${COURSE_SELECT} from courses order by start_at asc`);
+      } catch (error) {
+        if (!["42P01", "42703"].includes(error.code)) throw error;
+        await ensureSchema();
+        rows = await sql.query(`select ${COURSE_SELECT} from courses order by start_at asc`);
+      }
       json(res, 200, { courses: rows.map(normalizeCourse) });
       return;
     }
+
+    await ensureSchema();
 
     if (req.method === "POST") {
       if (!requireAdmin(req, res)) return;
