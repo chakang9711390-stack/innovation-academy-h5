@@ -488,6 +488,56 @@ function switchTab(tab) {
   }
 }
 
+function openProfileModal() {
+  if (!state.currentUser) return;
+  const username = state.currentUser.username;
+  $("#profileUsername").textContent = username;
+  $("#profileRole").textContent = state.isAdmin ? "管理员" : "成员";
+  $("#profileAvatar").textContent = username.slice(0, 1).toUpperCase();
+  $("#profilePasswordForm").reset();
+  $("#profileModal").classList.add("is-visible");
+  $("#profileModal").setAttribute("aria-hidden", "false");
+}
+
+function closeProfileModal() {
+  $("#profileModal").classList.remove("is-visible");
+  $("#profileModal").setAttribute("aria-hidden", "true");
+  $("#profilePasswordForm").reset();
+  $("#profilePasswordSubmit").disabled = false;
+  $("#profilePasswordSubmit").textContent = "确认修改密码";
+}
+
+async function submitProfilePassword() {
+  const currentPassword = $("#currentPassword").value;
+  const newPassword = $("#newPassword").value;
+  const confirmPassword = $("#confirmNewPassword").value;
+  const submitButton = $("#profilePasswordSubmit");
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    showToast("请完整填写密码信息");
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    showToast("两次新密码不一致");
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "修改中...";
+  try {
+    await apiFetch("/api/profile", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+    });
+    closeProfileModal();
+    showToast("密码已修改，请牢记新密码");
+  } catch (error) {
+    showToast(error.message);
+    submitButton.disabled = false;
+    submitButton.textContent = "确认修改密码";
+  }
+}
+
 function renderReminderBadge() {
   const badge = $("#reminderBadge b");
   if (badge) badge.textContent = state.messagesRead ? "0" : buildMessages().length;
@@ -1541,6 +1591,16 @@ function bindEvents() {
   $("#logoutButton").addEventListener("click", () => {
     clearCurrentUser();
     showToast("已退出登录");
+  });
+
+  $("#userBadge").addEventListener("click", openProfileModal);
+  $("#closeProfile").addEventListener("click", closeProfileModal);
+  $("#profileModal").addEventListener("click", (event) => {
+    if (event.target.id === "profileModal") closeProfileModal();
+  });
+  $("#profilePasswordForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitProfilePassword();
   });
 
   $("#prevMonth").addEventListener("click", () => {

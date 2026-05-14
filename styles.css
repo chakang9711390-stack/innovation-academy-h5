@@ -1836,6 +1836,7 @@ textarea:focus {
 
 .replay-modal,
 .confirm-modal,
+.profile-modal,
 .rating-sheet,
 .course-detail-sheet {
   position: fixed;
@@ -1851,6 +1852,7 @@ textarea:focus {
 
 .replay-modal.is-visible,
 .confirm-modal.is-visible,
+.profile-modal.is-visible,
 .rating-sheet.is-visible,
 .course-detail-sheet.is-visible {
   display: flex;
@@ -1876,6 +1878,114 @@ textarea:focus {
   background: #fff;
   padding: 24px;
   box-shadow: 0 28px 80px rgba(20, 41, 50, 0.2);
+}
+
+.profile-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #fffaf4;
+  padding: 22px;
+  box-shadow: 0 28px 80px rgba(92, 50, 35, 0.22);
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.profile-head h3,
+.profile-form h4 {
+  margin: 0;
+  color: #2b1d19;
+}
+
+.profile-close {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ebc9b6;
+  border-radius: 50%;
+  background: #fff;
+  color: #7e3e2a;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #f0cdbc;
+  border-radius: 14px;
+  background: #fff;
+  margin-bottom: 18px;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ef6b2a, #cf4f2a);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profile-avatar::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #59d66d;
+}
+
+.profile-card p {
+  margin: 4px 0;
+  color: #6f5045;
+}
+
+.profile-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #f0cdbc;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.profile-form label {
+  display: grid;
+  gap: 8px;
+  color: #7d6258;
+  font-size: 14px;
+}
+
+.profile-form input {
+  min-height: 46px;
+  border: 1px solid #eed4c6;
+  border-radius: 12px;
+  padding: 0 14px;
+  background: #fffaf5;
+  color: #2b1d19;
+  font: inherit;
+}
+
+.profile-form input:focus {
+  outline: 2px solid rgba(209, 84, 42, 0.22);
+  border-color: #d1542a;
 }
 
 .rating-sheet {
@@ -2530,6 +2640,7 @@ textarea:focus {
 
   .replay-modal,
   .confirm-modal,
+  .profile-modal,
   .rating-sheet,
   .course-detail-sheet {
     padding: 12px;

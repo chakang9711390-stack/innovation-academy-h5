@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>创新学院 H5 直播课堂</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=20260513-icon1" />
-    <link rel="stylesheet" href="./styles.css?v=20260514-calendar-clean1" />
+    <link rel="stylesheet" href="./styles.css?v=20260514-profile1" />
   </head>
   <body>
     <section class="auth-screen" id="authScreen">
@@ -37,7 +37,7 @@
         </div>
         <div class="header-actions">
           <button class="reminder-badge" id="reminderBadge" type="button" aria-label="消息通知"><span></span><b>0</b></button>
-          <span class="user-badge" id="userBadge">未登录</span>
+          <button class="user-badge" id="userBadge" type="button">未登录</button>
           <button class="role-switch" id="logoutButton" type="button">退出</button>
           <span class="pill">学院直播</span>
         </div>
@@ -214,6 +214,29 @@
       </div>
     </div>
 
+    <div class="profile-modal" id="profileModal" aria-hidden="true">
+      <div class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+        <div class="profile-head">
+          <h3 id="profileTitle">个人中心</h3>
+          <button class="profile-close" id="closeProfile" type="button" aria-label="关闭个人中心">×</button>
+        </div>
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">创</div>
+          <div>
+            <p>用户名：<strong id="profileUsername">-</strong></p>
+            <p>身份：<span id="profileRole">-</span></p>
+          </div>
+        </div>
+        <form class="profile-form" id="profilePasswordForm">
+          <h4>修改密码</h4>
+          <label>当前密码<input id="currentPassword" type="password" autocomplete="current-password" required placeholder="请输入当前密码" /></label>
+          <label>新密码<input id="newPassword" type="password" autocomplete="new-password" required placeholder="请输入新密码" /></label>
+          <label>确认新密码<input id="confirmNewPassword" type="password" autocomplete="new-password" required placeholder="请再次输入新密码" /></label>
+          <button class="primary-button full" type="submit" id="profilePasswordSubmit">确认修改密码</button>
+        </form>
+      </div>
+    </div>
+
     <div class="rating-sheet" id="ratingSheet" aria-hidden="true">
       <div class="rating-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="ratingSheetTitle">
         <div class="rating-sheet-head">
@@ -266,6 +289,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=20260514-calendar-clean1"></script>
+    <script src="./app.js?v=20260514-profile1"></script>
   </body>
 </html>
