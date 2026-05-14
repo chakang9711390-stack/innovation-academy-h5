@@ -439,7 +439,7 @@ function renderAuthMode() {
   $(".auth-register-field").classList.toggle("is-visible", isRegister);
   $("#authSubmit").textContent = isRegister ? "注册并登录" : "登录";
   $("#authPassword").autocomplete = isRegister ? "new-password" : "current-password";
-  $("#authTip").textContent = isRegister ? "注册成功后将以普通成员身份进入课堂" : "管理员初始账号：kete2026，密码：999999";
+  $("#authTip").textContent = isRegister ? "注册成功后将以普通成员身份进入课堂" : "";
 }
 
 async function handleAuthSubmit() {
@@ -667,7 +667,6 @@ function renderEventCard(course) {
       <span class="timeline-dot" aria-hidden="true"></span>
       <span class="event-body">
         <h4>${course.title}</h4>
-        ${status !== "ended" ? `<span class="calendar-status ${status}">${statusLabel(status)}</span>` : ""}
         <p class="meta strong-date">${dateText}</p>
         <div class="tag-row">${course.positions.slice(0, 3).map((pos) => `<span class="tag">${pos}</span>`).join("")}</div>
         <div class="calendar-detail-block">
@@ -1573,15 +1572,6 @@ function bindEvents() {
     if (!button) return;
     state.calendarFilter = button.dataset.calendarFilter;
     renderEventList();
-  });
-
-  $("#eventList").addEventListener("click", (event) => {
-    if (event.target.closest("[data-action]")) return;
-    if (event.target.closest("a")) return;
-    const card = event.target.closest("[data-course]");
-    if (!card) return;
-    switchTab("square");
-    window.setTimeout(() => $(`#course-${card.dataset.course}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   });
 
   document.body.addEventListener("click", async (event) => {
