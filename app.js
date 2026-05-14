@@ -446,22 +446,28 @@ async function handleAuthSubmit() {
   const username = $("#authUsername").value.trim();
   const password = $("#authPassword").value;
   const confirmPassword = $("#authConfirmPassword").value;
+  const submitButton = $("#authSubmit");
 
   if (!username || !password) {
     showToast("请输入账号和密码");
     return;
   }
 
+  submitButton.disabled = true;
+  submitButton.textContent = state.authMode === "register" ? "注册中..." : "登录中...";
   try {
     const data = await apiFetch("/api/auth", {
       method: "POST",
       body: JSON.stringify({ mode: state.authMode, username, password, confirmPassword }),
     });
-    setCurrentUser(data.user, data.token, { skipActiveRender: true });
+    setCurrentUser(data.user, data.token);
     showToast(state.authMode === "register" ? "注册成功，已登录" : data.user.role === "admin" ? "管理员登录成功" : "登录成功");
-    await loadAppData();
+    loadAppData();
   } catch (error) {
     showToast(error.message);
+  } finally {
+    submitButton.disabled = false;
+    renderAuthMode();
   }
 }
 

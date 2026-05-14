@@ -1,5 +1,5 @@
 const {
-  ensureSchema,
+  ensureAuthSchema,
   getSql,
   hashPassword,
   json,
@@ -10,7 +10,7 @@ const {
 
 module.exports = async function handler(req, res) {
   try {
-    await ensureSchema();
+    await ensureAuthSchema();
     if (req.method !== "POST") {
       json(res, 405, { error: "Method not allowed" });
       return;

@@ -6,6 +6,7 @@ const ADMIN_PASSWORD = "999999";
 const SESSION_SECRET = process.env.SESSION_SECRET || "local-development-secret";
 
 let schemaReady = false;
+let authSchemaReady = false;
 
 function getSql() {
   if (!process.env.DATABASE_URL) {
@@ -137,14 +138,7 @@ function normalizeCourse(row) {
 async function ensureSchema() {
   if (schemaReady) return;
   const sql = getSql();
-  await sql`
-    create table if not exists users (
-      username text primary key,
-      password_hash text not null,
-      role text not null check (role in ('admin', 'member')),
-      created_at timestamptz not null default now()
-    )
-  `;
+  await ensureAuthSchema();
   await sql`
     create table if not exists courses (
       id text primary key,
@@ -241,16 +235,33 @@ async function ensureSchema() {
   `;
   await sql`alter table notifications add column if not exists trigger_key text`;
   await sql`create unique index if not exists notifications_trigger_key_idx on notifications(trigger_key) where trigger_key is not null`;
-  await sql`
-    insert into users (username, password_hash, role)
-    values (${ADMIN_USERNAME}, ${hashPassword(ADMIN_PASSWORD)}, 'admin')
-    on conflict (username) do nothing
-  `;
   const countRows = await sql`select count(*)::int as count from courses`;
   if (countRows[0].count === 0) {
     await seedCourses(sql);
   }
   schemaReady = true;
+}
+
+async function ensureAuthSchema() {
+  if (authSchemaReady) return;
+  const sql = getSql();
+  await sql`
+    create table if not exists users (
+      username text primary key,
+      password_hash text not null,
+      role text not null check (role in ('admin', 'member')),
+      created_at timestamptz not null default now()
+    )
+  `;
+  const adminRows = await sql`select username from users where username = ${ADMIN_USERNAME} limit 1`;
+  if (!adminRows[0]) {
+    await sql`
+      insert into users (username, password_hash, role)
+      values (${ADMIN_USERNAME}, ${hashPassword(ADMIN_PASSWORD)}, 'admin')
+      on conflict (username) do nothing
+    `;
+  }
+  authSchemaReady = true;
 }
 
 async function seedCourses(sql) {
@@ -349,4 +360,5 @@ module.exports = {
   requireAdmin,
   normalizeCourse,
   ensureSchema,
+  ensureAuthSchema,
 };
