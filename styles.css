@@ -1151,14 +1151,6 @@ h1 {
   display: none !important;
 }
 
-#cancelEdit {
-  display: none;
-}
-
-#cancelEdit.is-visible {
-  display: inline-flex;
-}
-
 .section-title.compact {
   padding: 0;
 }
@@ -1955,6 +1947,21 @@ textarea:focus {
 .profile-card p {
   margin: 4px 0;
   color: #6f5045;
+}
+
+.profile-logout {
+  width: 100%;
+  min-height: 46px;
+  margin: 0 0 18px;
+  border: 1px solid #f0cdbc;
+  border-radius: 14px;
+  background: #fff7ef;
+  color: #8c3b27;
+  font-weight: 500;
+}
+
+.profile-logout:active {
+  transform: scale(0.985);
 }
 
 .profile-form {

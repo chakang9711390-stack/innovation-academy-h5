@@ -124,6 +124,8 @@ const POSITION_OPTIONS = [
   "商业化",
   "安全",
   "客服",
+  "HR",
+  "行政",
 ];
 
 const fmtDate = (date) => {
@@ -902,7 +904,7 @@ function renderRecords() {
   const records = state.courses.filter((course) => state.watched.has(course.id));
   const totalMs = records.reduce((sum, course) => sum + (parseDate(course.endAt) - parseDate(course.startAt)), 0);
   $("#learnedCount").textContent = records.length;
-  $("#learnedHours").textContent = `${Math.round(totalMs / 36e5)}h`;
+  $("#learnedHours").textContent = formatLearningDuration(totalMs);
   $$(".learning-tab").forEach((button) => button.classList.toggle("is-active", button.dataset.recordMode === state.recordMode));
   $("#learningStats").hidden = state.recordMode !== "learning";
   $("#reservationList").hidden = state.recordMode !== "reservations";
@@ -913,6 +915,14 @@ function renderRecords() {
   $("#recordList").innerHTML = records.length
     ? records.map((course, index) => renderLearningCourseCard(course, { type: "learning", issueIndex: records.length - index })).join("")
     : `<div class="empty-state">暂无学习记录</div>`;
+}
+
+function formatLearningDuration(totalMs) {
+  const totalMinutes = Math.max(0, Math.round(totalMs / 60000));
+  if (totalMinutes < 60) return `${totalMinutes}分钟`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes ? `${hours}小时${minutes}分钟` : `${hours}小时`;
 }
 
 function renderLearningCourseCard(course, { type, issueIndex }) {
@@ -1471,7 +1481,6 @@ function resetCourseForm() {
   $("#teacherName").value = "";
   $("#liveUrl").value = "";
   $("#publishButton").textContent = "发布";
-  $("#cancelEdit").classList.remove("is-visible");
   updateCoverPreview();
 }
 
@@ -1492,7 +1501,6 @@ function fillCourseForm(course) {
   $("#teacherName").value = course.teacher;
   $("#liveUrl").value = course.liveUrl || "";
   $("#publishButton").textContent = "保存修改";
-  $("#cancelEdit").classList.add("is-visible");
   updateCoverPreview();
 }
 
@@ -1594,7 +1602,8 @@ function bindEvents() {
     if (tab) switchTab(tab.dataset.tab);
   });
 
-  $("#logoutButton").addEventListener("click", () => {
+  $("#profileLogoutButton").addEventListener("click", () => {
+    closeProfileModal();
     clearCurrentUser();
     showToast("已退出登录");
   });
@@ -1965,11 +1974,6 @@ function bindEvents() {
     if (button.dataset.adminAction === "delete") {
       openDeleteConfirm(course);
     }
-  });
-
-  $("#cancelEdit").addEventListener("click", () => {
-    resetCourseForm();
-    showAdminPanel("adminListPanel");
   });
 
   $("#cancelDeleteCourse").addEventListener("click", closeDeleteConfirm);
