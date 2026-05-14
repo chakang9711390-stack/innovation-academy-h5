@@ -8,6 +8,7 @@ const state = {
   selectedDate: "",
   calendarFilter: "all",
   positionFilter: "全部",
+  mainPositionFilters: new Set(),
   extraPositionFilters: new Set(),
   squareMorePositionsVisible: false,
   recordMode: "reservations",
@@ -147,7 +148,7 @@ function canUploadCourseAssets(course) {
 }
 
 function statusLabel(status) {
-  return { upcoming: "即将开播", live: "直播中", ended: "已结束" }[status];
+  return { upcoming: "未开播", live: "开播", ended: "已完成" }[status];
 }
 
 function defaultCover(course) {
@@ -665,7 +666,7 @@ function renderEventCard(course) {
       <span class="timeline-dot" aria-hidden="true"></span>
       <span class="event-body">
         <h4>${course.title}</h4>
-        ${status === "upcoming" ? `<span class="calendar-status">即将开播</span>` : ""}
+        ${status !== "ended" ? `<span class="calendar-status ${status}">${statusLabel(status)}</span>` : ""}
         <p class="meta strong-date">${dateText}</p>
         <div class="tag-row">${course.positions.slice(0, 3).map((pos) => `<span class="tag">${pos}</span>`).join("")}</div>
         <div class="calendar-detail-block">
@@ -677,7 +678,7 @@ function renderEventCard(course) {
           <ul class="scenario-list">${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
         </div>
         <div class="event-card-actions">
-          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">加入 Lark 会议</a>` : `<span></span>`}
+          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">加入会议</a>` : `<span></span>`}
           <button class="calendar-reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>
         </div>
       </span>
@@ -687,7 +688,7 @@ function renderEventCard(course) {
 
 function renderCourses() {
   renderSquarePositionFilter();
-  const published = state.courses.filter((course) => course.published && getCourseRuntime(course) === "ended" && courseMatchesPosition(course, state.positionFilter));
+  const published = state.courses.filter((course) => course.published && getCourseRuntime(course) === "ended" && courseMatchesPosition(course));
   const replayCourses = published.sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
   $("#upcomingCount").textContent = `${replayCourses.length} 门`;
@@ -698,9 +699,10 @@ function renderSquarePositionFilter() {
   const mainPositions = ["运维", "研发", "测试", "产品"];
   const morePositions = POSITION_OPTIONS.filter((position) => !mainPositions.includes(position));
   const extraCount = state.extraPositionFilters.size;
+  const hasSelectedPositions = state.mainPositionFilters.size > 0 || extraCount > 0;
   $("#squarePositionFilter").innerHTML = `
-    <button class="filter-chip ${state.positionFilter === "全部" && !extraCount ? "is-active" : ""}" type="button" data-position-filter="全部">全部</button>
-    ${mainPositions.map((position) => `<button class="filter-chip ${state.positionFilter === position ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`).join("")}
+    <button class="filter-chip ${!hasSelectedPositions ? "is-active" : ""}" type="button" data-position-filter="全部">全部</button>
+    ${mainPositions.map((position) => `<button class="filter-chip ${state.mainPositionFilters.has(position) ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`).join("")}
     <span class="square-more-wrap">
       <button class="filter-chip more-positions ${state.squareMorePositionsVisible ? "is-open" : ""}" id="toggleSquareMorePositions" type="button" aria-expanded="${state.squareMorePositionsVisible}">
         ${extraCount ? `更多岗位（${extraCount}）` : "更多岗位"}
@@ -719,22 +721,22 @@ function renderSquarePositionFilter() {
 
 function courseMatchesPosition(course, position) {
   const selected = [
-    ...(position && position !== "全部" ? [position] : []),
+    ...state.mainPositionFilters,
     ...state.extraPositionFilters,
   ];
+  if (!selected.length && position && position !== "全部") selected.push(position);
   if (!selected.length) return true;
   return selected.some((target) => course.positions.some((item) => item === target || item.includes(target) || target.includes(item)));
 }
 
 function renderCourseCard(course, issueIndex = 0) {
-  const headline = course.content[0] || course.subtitle;
+  const headline = course.content[0] || course.subtitle || course.title;
   const coverThemes = ["#25385f", "#4a2507", "#233f12", "#3b1225", "#102f37", "#442d11"];
 
   return `
     <article class="course-card replay-tile prototype-card" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
       <div class="prototype-cover">
         <div class="prototype-cover-copy">
-          <span>第${issueIndex}期</span>
           <strong>${headline}</strong>
         </div>
       </div>
@@ -867,7 +869,6 @@ function renderLearningCourseCard(course, { type, issueIndex }) {
     <article class="learning-course-card" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
       <div class="prototype-cover">
         <div class="prototype-cover-copy">
-          <span>第${issueIndex}期</span>
           <strong>${course.content[0] || course.subtitle}</strong>
         </div>
       </div>
@@ -976,7 +977,6 @@ function openRatingPage(course) {
 function renderRatingPage(course) {
   const detail = myRatingDetail(course.id);
   const readonly = Boolean(state.ratings[course.id]);
-  const teacher = course.teacher.split("-").pop();
   const intro = renderRatingCourseIntro(course);
   if (readonly) {
     return `
@@ -987,7 +987,7 @@ function renderRatingPage(course) {
         ${renderReadonlyRatingField("你认为本堂课老师讲解是否清晰完整，对你的工作有帮助？", detail?.clarityScore || detail?.score || state.ratings[course.id])}
         ${renderReadonlyChoiceField("本次课程内容难度如何？", detail?.difficulty || "未填写")}
         ${renderReadonlyChoiceField("跟随老师演示，你是否成功完成了安装和基础配置？", detail?.completedSetup || "未填写")}
-        ${renderReadonlyRatingField(`对本次主讲老师 ${teacher} 的综合评价`, detail?.teacherScore || detail?.score || state.ratings[course.id])}
+        ${renderReadonlyRatingField("对本次主讲老师的综合评价", detail?.teacherScore || detail?.score || state.ratings[course.id])}
         <div class="rating-readonly-comment">
           <b>你希望下次课程改进或新增哪些内容？（选填）</b>
           <p>${detail?.comment || "未填写"}</p>
@@ -1017,7 +1017,7 @@ function renderRatingPage(course) {
           </span>
           <input id="pageRatingCompleted" type="hidden" value="是" />
         </label>
-        ${renderEditableRatingField(`对本次主讲老师 ${teacher} 的综合评价`, "pageRatingTeacher")}
+        ${renderEditableRatingField("对本次主讲老师的综合评价", "pageRatingTeacher")}
         <label class="rating-field no-panel">
           <span>你希望下次课程改进或新增哪些内容？（选填）</span>
           <textarea id="pageRatingComment" rows="4" placeholder="请输入你的建议..."></textarea>
@@ -1662,8 +1662,21 @@ function bindEvents() {
     const button = event.target.closest("[data-position-filter]");
     if (!button) return;
     event.stopPropagation();
-    state.positionFilter = button.dataset.positionFilter;
-    state.extraPositionFilters.clear();
+    const position = button.dataset.positionFilter;
+    if (position === "全部") {
+      state.mainPositionFilters.clear();
+      state.extraPositionFilters.clear();
+      state.positionFilter = "全部";
+      state.squareMorePositionsVisible = false;
+      renderCourses();
+      return;
+    }
+    if (state.mainPositionFilters.has(position)) {
+      state.mainPositionFilters.delete(position);
+    } else {
+      state.mainPositionFilters.add(position);
+    }
+    state.positionFilter = state.mainPositionFilters.size || state.extraPositionFilters.size ? "自定义" : "全部";
     renderCourses();
   });
   $("#squarePositionFilter").addEventListener("change", (event) => {
@@ -1675,7 +1688,7 @@ function bindEvents() {
     } else {
       state.extraPositionFilters.delete(input.value);
     }
-    state.positionFilter = "全部";
+    state.positionFilter = state.mainPositionFilters.size || state.extraPositionFilters.size ? "自定义" : "全部";
     renderCourses();
   });
 
