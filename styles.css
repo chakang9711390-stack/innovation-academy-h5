@@ -3479,20 +3479,29 @@ h1 {
 }
 
 #squareView .prototype-card-body {
+  display: flex;
+  min-height: 118px;
+  flex-direction: column;
   padding: 12px 10px 13px;
 }
 
 #squareView .prototype-card-body h4 {
+  display: -webkit-box;
+  min-height: 40px;
   margin: 0;
+  overflow: hidden;
   color: #2d1710;
   font-size: 15px;
   line-height: 1.35;
   font-weight: 700;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 #squareView .prototype-card-body .tag-row {
   gap: 7px;
-  margin-top: 12px;
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 #squareView .prototype-card .tag {
@@ -3656,20 +3665,28 @@ h1 {
 }
 
 #recordsView .learning-course-body {
-  min-height: 76px;
+  display: flex;
+  min-height: 112px;
+  flex-direction: column;
   padding: 12px;
 }
 
 #recordsView .learning-course-body h4 {
+  display: -webkit-box;
+  min-height: 42px;
   margin: 0;
+  overflow: hidden;
   color: #2c1710;
   font-size: 15px;
   font-weight: 700;
   line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 #recordsView .learning-course-body .tag-row {
-  margin-top: 12px;
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 #recordsView .learning-course-body .tag {
