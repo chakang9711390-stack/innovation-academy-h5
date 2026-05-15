@@ -1,5 +1,6 @@
 const { ensureSchema, getSql, json } = require("./_lib");
 const { createAutomaticNotifications } = require("./notifications");
+const { createAutomaticTelegramNotifications } = require("./telegram");
 
 module.exports = async function handler(req, res) {
   try {
@@ -16,8 +17,10 @@ module.exports = async function handler(req, res) {
       }
     }
     await ensureSchema();
-    const created = await createAutomaticNotifications(getSql());
-    json(res, 200, { ok: true, created });
+    const sql = getSql();
+    const created = await createAutomaticNotifications(sql);
+    const telegram = await createAutomaticTelegramNotifications(sql);
+    json(res, 200, { ok: true, created, telegram });
   } catch (error) {
     json(res, 500, { error: error.message || "自动提醒失败" });
   }

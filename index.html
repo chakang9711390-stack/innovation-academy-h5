@@ -205,6 +205,17 @@
             <p class="form-hint">Token 保存后不会在页面回显；也可继续使用 Vercel 环境变量 TELEGRAM_BOT_TOKEN 作为兜底。</p>
             <button class="primary-button full" type="submit">保存 Bot Token</button>
           </form>
+          <form class="telegram-card telegram-auto-card" id="telegramAutoForm">
+            <div>
+              <h4>自动发送</h4>
+              <p>开启后，所有已启用群会在课程开课前 1 小时和 15 分钟各收到一次同样的 TG 通知。</p>
+            </div>
+            <label class="telegram-switch">
+              <input id="telegramAutoEnabled" type="checkbox" />
+              <span>启用自动发送</span>
+            </label>
+            <button class="primary-button" type="submit">保存自动发送设置</button>
+          </form>
           <form class="telegram-card telegram-group-editor" id="telegramGroupForm">
             <div class="telegram-subhead">
               <div>
@@ -350,6 +361,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=20260515-tgconfig2"></script>
+    <script src="./app.js?v=20260515-tgauto1"></script>
   </body>
 </html>

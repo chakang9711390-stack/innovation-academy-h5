@@ -19,7 +19,7 @@ const state = {
   reminders: new Set(),
   messagesRead: false,
   notifications: [],
-  telegramConfig: { botConfigured: false, botSource: "", groups: [] },
+  telegramConfig: { botConfigured: false, botSource: "", autoEnabled: false, groups: [] },
   telegramTargetCourseId: "",
   telegramSelectedGroups: new Set(),
   courses: [
@@ -1355,11 +1355,12 @@ function renderAdminReviewPanel(course) {
 }
 
 function renderTelegramConfig() {
-  const { botConfigured, botSource, groups } = state.telegramConfig;
+  const { botConfigured, botSource, autoEnabled, groups } = state.telegramConfig;
   $("#telegramBotStatus").textContent = botConfigured
     ? `Bot 已配置${botSource === "env" ? "（环境变量）" : ""}`
     : "未配置 Bot";
   $("#telegramBotStatus").classList.toggle("is-ready", botConfigured);
+  $("#telegramAutoEnabled").checked = autoEnabled;
   $("#telegramGroupCount").textContent = `${groups.length} 个`;
   $("#telegramGroupList").innerHTML = groups.length
     ? groups.map((group) => `
@@ -1479,6 +1480,7 @@ async function loadTelegramConfig() {
   state.telegramConfig = {
     botConfigured: Boolean(data.botConfigured),
     botSource: data.botSource || "",
+    autoEnabled: Boolean(data.autoEnabled),
     groups: data.groups || [],
   };
   renderTelegramConfig();
@@ -1976,6 +1978,27 @@ function bindEvents() {
     } finally {
       button.disabled = false;
       button.textContent = "保存 Bot Token";
+    }
+  });
+
+  $("#telegramAutoForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = $("#telegramAutoForm button[type='submit']");
+    button.disabled = true;
+    button.textContent = "保存中...";
+    try {
+      const data = await apiFetch("/api/telegram", {
+        method: "POST",
+        body: JSON.stringify({ action: "saveAutoSetting", autoEnabled: $("#telegramAutoEnabled").checked }),
+      });
+      state.telegramConfig.autoEnabled = Boolean(data.autoEnabled);
+      renderTelegramConfig();
+      showToast(data.autoEnabled ? "TG 自动发送已开启" : "TG 自动发送已关闭");
+    } catch (error) {
+      showToast(error.message || "自动发送设置保存失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = "保存自动发送设置";
     }
   });
 

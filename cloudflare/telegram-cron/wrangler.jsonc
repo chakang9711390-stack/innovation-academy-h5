@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "innovation-academy-tg-cron",
+  "main": "src/index.js",
+  "compatibility_date": "2026-05-15",
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  }
+}

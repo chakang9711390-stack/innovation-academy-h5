@@ -1506,6 +1506,35 @@ h1 {
   color: #2d1d15;
 }
 
+.telegram-auto-card {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.telegram-auto-card h4 {
+  margin: 0 0 4px;
+  color: #2d1d15;
+  font-size: 16px;
+}
+
+.telegram-auto-card p {
+  color: #9c7a68;
+  font-size: 13px;
+}
+
+.telegram-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.telegram-switch input {
+  width: 18px;
+  height: 18px;
+  accent-color: #c7542c;
+}
+
 .telegram-subhead,
 .telegram-list-head {
   display: flex;
@@ -2923,6 +2952,10 @@ textarea:focus {
 
   .telegram-panel-head {
     display: grid;
+  }
+
+  .telegram-auto-card {
+    grid-template-columns: 1fr;
   }
 
   .telegram-subhead {

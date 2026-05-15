@@ -23,6 +23,11 @@ function validateChatId(chatId) {
   return /^-?\d{5,}$/.test(chatId) || /^@[A-Za-z0-9_]{5,}$/.test(chatId);
 }
 
+function parseBoolean(value, fallback = false) {
+  if (value === undefined || value === null || value === "") return fallback;
+  return String(value) === "true";
+}
+
 function buildTelegramText(course) {
   const positions = Array.isArray(course.positions) ? course.positions.join(" / ") : "";
   const content = Array.isArray(course.content) && course.content.length
@@ -48,6 +53,11 @@ function buildTelegramText(course) {
 async function getBotToken(sql) {
   const rows = await sql`select value from telegram_config where key = 'bot_token' limit 1`;
   return rows[0]?.value || process.env.TELEGRAM_BOT_TOKEN || "";
+}
+
+async function getAutoEnabled(sql) {
+  const rows = await sql`select value from telegram_config where key = 'auto_enabled' limit 1`;
+  return parseBoolean(rows[0]?.value, false);
 }
 
 async function sendTelegramMessage(course, group, token) {
@@ -77,6 +87,7 @@ async function sendTelegramMessage(course, group, token) {
 
 async function listConfig(sql, res) {
   const token = await getBotToken(sql);
+  const autoEnabled = await getAutoEnabled(sql);
   const groups = await sql`
     select id, name, chat_id, description, enabled
     from telegram_groups
@@ -86,6 +97,7 @@ async function listConfig(sql, res) {
     ok: true,
     botConfigured: Boolean(token),
     botSource: token && process.env.TELEGRAM_BOT_TOKEN === token ? "env" : "database",
+    autoEnabled,
     groups: groups.map(normalizeGroup),
   });
 }
@@ -136,6 +148,16 @@ async function saveGroup(sql, body, res) {
       updated_at = now()
   `;
   json(res, 200, { ok: true, group: { id, name, chatId, description, enabled } });
+}
+
+async function saveAutoSetting(sql, body, res) {
+  const autoEnabled = body.autoEnabled === true;
+  await sql`
+    insert into telegram_config (key, value, updated_at)
+    values ('auto_enabled', ${String(autoEnabled)}, now())
+    on conflict (key) do update set value = excluded.value, updated_at = now()
+  `;
+  json(res, 200, { ok: true, autoEnabled });
 }
 
 async function deleteGroup(sql, body, res) {
@@ -205,6 +227,64 @@ async function sendToGroups(sql, body, res) {
   json(res, 200, { ok: true, sent, failed });
 }
 
+async function createAutomaticTelegramNotifications(sql, now = new Date()) {
+  if (!(await getAutoEnabled(sql))) return { sent: 0, failed: 0, skipped: "disabled" };
+  const token = await getBotToken(sql);
+  if (!token) return { sent: 0, failed: 0, skipped: "missing_bot" };
+
+  const [courses, groups] = await Promise.all([
+    sql`
+      select id, title, positions, start_at, end_at, content, scenarios, teacher, live_url
+      from courses
+      where status = 'published'
+        and start_at > now()
+        and start_at <= now() + interval '1 hour 10 minutes'
+      order by start_at asc
+    `,
+    sql`
+      select id, name, chat_id, description, enabled
+      from telegram_groups
+      where enabled = true
+      order by created_at asc
+    `,
+  ]);
+  let sent = 0;
+  let failed = 0;
+  const nowMs = now.getTime();
+  for (const course of courses) {
+    const startMs = new Date(course.start_at).getTime();
+    for (const minutesBefore of [60, 15]) {
+      const dueAt = startMs - minutesBefore * 60 * 1000;
+      const dueWindowEnds = dueAt + 10 * 60 * 1000;
+      if (nowMs < dueAt || nowMs >= dueWindowEnds) continue;
+      for (const group of groups) {
+        const triggerKey = `${course.id}:${group.id}:before_${minutesBefore}m`;
+        const id = `tgl_${crypto.randomUUID()}`;
+        const reserved = await sql`
+          insert into telegram_delivery_logs (id, course_id, group_id, trigger_key)
+          values (${id}, ${course.id}, ${group.id}, ${triggerKey})
+          on conflict (trigger_key) do nothing
+          returning id
+        `;
+        if (!reserved.length) continue;
+        try {
+          const message = await sendTelegramMessage(course, group, token);
+          await sql`
+            update telegram_delivery_logs
+            set telegram_message_id = ${String(message.message_id)}
+            where id = ${id}
+          `;
+          sent += 1;
+        } catch (error) {
+          await sql`delete from telegram_delivery_logs where id = ${id}`;
+          failed += 1;
+        }
+      }
+    }
+  }
+  return { sent, failed };
+}
+
 module.exports = async function handler(req, res) {
   try {
     await ensureSchema();
@@ -231,6 +311,10 @@ module.exports = async function handler(req, res) {
       await saveGroup(sql, body, res);
       return;
     }
+    if (action === "saveAutoSetting") {
+      await saveAutoSetting(sql, body, res);
+      return;
+    }
     if (action === "deleteGroup") {
       await deleteGroup(sql, body, res);
       return;
@@ -247,3 +331,4 @@ module.exports = async function handler(req, res) {
 };
 
 module.exports.buildTelegramText = buildTelegramText;
+module.exports.createAutomaticTelegramNotifications = createAutomaticTelegramNotifications;
