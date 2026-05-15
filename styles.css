@@ -1195,6 +1195,10 @@ h1 {
   background: #af4e28;
 }
 
+.admin-action-button.is-telegram {
+  background: #2f6c68;
+}
+
 .admin-icon-action.is-danger {
   background: #8b2522;
 }
@@ -1209,7 +1213,7 @@ h1 {
 .admin-table-head,
 .admin-course-row {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) 86px 66px 38px 50px 132px;
+  grid-template-columns: minmax(170px, 1fr) 82px 64px 36px 48px 168px;
   align-items: center;
   gap: 6px;
 }
@@ -1267,7 +1271,7 @@ h1 {
 
 .admin-actions {
   display: grid;
-  grid-template-columns: 40px 40px 36px;
+  grid-template-columns: 42px 62px 48px;
   gap: 5px;
   min-width: 0;
   align-content: center;
@@ -1279,22 +1283,6 @@ h1 {
   min-width: 0;
   white-space: nowrap;
   text-align: center;
-}
-
-.admin-actions .admin-action-button:nth-child(3) {
-  grid-column: 1;
-}
-
-.admin-actions .admin-icon-action:nth-child(4) {
-  grid-column: 2;
-}
-
-.admin-actions .admin-icon-action:nth-child(5) {
-  grid-column: 3;
-}
-
-.admin-actions .admin-action-button:nth-child(2) {
-  grid-column: 2 / span 2;
 }
 
 .publish-course-form {

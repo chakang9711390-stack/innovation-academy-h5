@@ -1308,7 +1308,8 @@ function renderAdminCourseItem(course) {
       <div class="admin-cell asset-mark" data-label="说明书">${handbookMark}</div>
       <div class="admin-actions" data-label="操作">
         <button class="admin-action-button" type="button" data-admin-action="upload" data-course="${course.id}">上传</button>
-        <button class="admin-action-button is-accent" type="button" data-admin-action="message" data-course="${course.id}">提醒</button>
+        <button class="admin-action-button is-accent" type="button" data-admin-action="message" data-course="${course.id}">站内提醒</button>
+        <button class="admin-action-button is-telegram" type="button" data-admin-action="telegram" data-course="${course.id}">TG通知</button>
         <button class="admin-action-button" type="button" data-admin-action="reviews" data-course="${course.id}">评价</button>
         <button class="admin-icon-action" type="button" data-admin-action="edit" data-course="${course.id}" aria-label="编辑">编辑</button>
         <button class="admin-icon-action is-danger" type="button" data-admin-action="delete" data-course="${course.id}" aria-label="删除">删除</button>
@@ -1953,6 +1954,24 @@ function bindEvents() {
         showToast(`已发送《${course.title}》提醒给学员`);
       } catch (error) {
         showToast(error.message || "提醒发送失败");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+      return;
+    }
+    if (button.dataset.adminAction === "telegram") {
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = "发送中";
+      try {
+        await apiFetch("/api/telegram", {
+          method: "POST",
+          body: JSON.stringify({ courseId: course.id }),
+        });
+        showToast(`已发送《${course.title}》到 TG 群`);
+      } catch (error) {
+        showToast(error.message || "TG 群通知发送失败");
       } finally {
         button.disabled = false;
         button.textContent = originalText;
