@@ -235,6 +235,25 @@ async function ensureSchema() {
   `;
   await sql`alter table notifications add column if not exists trigger_key text`;
   await sql`create unique index if not exists notifications_trigger_key_idx on notifications(trigger_key) where trigger_key is not null`;
+  await sql`
+    create table if not exists telegram_config (
+      key text primary key,
+      value text not null,
+      updated_at timestamptz not null default now()
+    )
+  `;
+  await sql`
+    create table if not exists telegram_groups (
+      id text primary key,
+      name text not null,
+      chat_id text not null,
+      description text not null default '',
+      enabled boolean not null default true,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `;
+  await sql`create unique index if not exists telegram_groups_chat_id_idx on telegram_groups(chat_id)`;
   const countRows = await sql`select count(*)::int as count from courses`;
   if (countRows[0].count === 0) {
     await seedCourses(sql);

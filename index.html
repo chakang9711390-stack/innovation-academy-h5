@@ -112,7 +112,10 @@
         <div class="admin-list-panel" id="adminListPanel">
           <div class="admin-page-head">
             <h3>课程管理 <span id="publishedManageCount"></span></h3>
-          <button class="admin-publish-button" id="openPublishCourse" type="button">+ 发布课程</button>
+            <div class="admin-head-actions">
+              <button class="admin-config-button" id="openTelegramConfig" type="button">TG 配置</button>
+              <button class="admin-publish-button" id="openPublishCourse" type="button">+ 发布课程</button>
+            </div>
           </div>
           <div class="admin-course-list" id="adminCourseList"></div>
         </div>
@@ -184,6 +187,55 @@
           <button class="detail-back" type="button" data-admin-back>← 返回管理</button>
           <h3>评价详情</h3>
           <div id="adminReviewContent"></div>
+        </section>
+
+        <section class="manage-panel admin-editor-panel telegram-config-panel" id="telegramConfigPanel" hidden>
+          <button class="detail-back" type="button" data-admin-back>← 返回管理</button>
+          <div class="telegram-panel-head">
+            <div>
+              <p class="eyebrow">Telegram</p>
+              <h3>TG 群通知配置</h3>
+            </div>
+            <span id="telegramBotStatus" class="telegram-status">未配置 Bot</span>
+          </div>
+          <form class="telegram-card" id="telegramBotForm">
+            <label>Bot Token
+              <input id="telegramBotToken" type="password" autocomplete="off" placeholder="例如：123456:ABC-DEF..." />
+            </label>
+            <p class="form-hint">Token 保存后不会在页面回显；也可继续使用 Vercel 环境变量 TELEGRAM_BOT_TOKEN 作为兜底。</p>
+            <button class="primary-button full" type="submit">保存 Bot Token</button>
+          </form>
+          <form class="telegram-card" id="telegramGroupForm">
+            <input id="telegramGroupId" type="hidden" />
+            <div class="two-col">
+              <label>群名称<input id="telegramGroupName" maxlength="40" required placeholder="如：创新学院直播通知群" /></label>
+              <label>Chat ID<input id="telegramChatId" required placeholder="-1001234567890 或 @channelname" /></label>
+            </div>
+            <label>群说明<input id="telegramGroupDescription" maxlength="80" placeholder="如：研发内部群 / 运营同步群" /></label>
+            <label class="telegram-toggle">
+              <input id="telegramGroupEnabled" type="checkbox" checked />
+              <span>启用这个群</span>
+            </label>
+            <div class="form-actions">
+              <button class="secondary-button" id="cancelTelegramGroupEdit" type="button">清空</button>
+              <button class="primary-button" type="submit">保存群配置</button>
+            </div>
+          </form>
+          <div class="telegram-group-list" id="telegramGroupList"></div>
+        </section>
+
+        <section class="manage-panel admin-editor-panel telegram-send-panel" id="telegramSendPanel" hidden>
+          <button class="detail-back" type="button" data-admin-back>← 返回管理</button>
+          <div class="telegram-panel-head">
+            <div>
+              <p class="eyebrow">Telegram</p>
+              <h3>发送 TG 群通知</h3>
+            </div>
+            <button class="admin-config-button" id="jumpTelegramConfig" type="button">群配置</button>
+          </div>
+          <article class="telegram-send-course" id="telegramSendCourse"></article>
+          <div class="telegram-group-checks" id="telegramSendGroupChecks"></div>
+          <button class="primary-button full" id="sendTelegramNow" type="button">发送到选中 TG 群</button>
         </section>
       </section>
     </main>
@@ -288,6 +340,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=20260515-tgnotify1"></script>
+    <script src="./app.js?v=20260515-tgconfig1"></script>
   </body>
 </html>

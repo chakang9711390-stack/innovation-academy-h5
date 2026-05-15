@@ -1173,7 +1173,14 @@ h1 {
   font-size: 14px;
 }
 
+.admin-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .admin-publish-button,
+.admin-config-button,
 .admin-action-button,
 .admin-icon-action {
   border: 0;
@@ -1189,6 +1196,13 @@ h1 {
 .admin-publish-button {
   background: #c7542c;
   padding: 10px 18px;
+}
+
+.admin-config-button {
+  border: 1px solid #e5cbb8;
+  background: #fff7ef;
+  color: #7d3d27;
+  padding: 9px 14px;
 }
 
 .admin-action-button.is-accent {
@@ -1440,6 +1454,175 @@ h1 {
   border-radius: 8px;
   background: #f8eee6;
   color: #7d3d27;
+}
+
+.telegram-config-panel,
+.telegram-send-panel {
+  border: 1px solid #e5cbb8;
+  border-radius: 12px;
+  background: #fffaf4;
+}
+
+.telegram-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.telegram-panel-head h3 {
+  color: #2d1d15;
+  font-size: 18px;
+}
+
+.telegram-status {
+  border: 1px solid #e5cbb8;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #9c7a68;
+  background: #fff7ef;
+  font-size: 12px;
+}
+
+.telegram-status.is-ready {
+  border-color: #cfe4c8;
+  color: #3f7d47;
+  background: #eef8ea;
+}
+
+.telegram-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #e5cbb8;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.telegram-card input {
+  border: 1px solid #e5cbb8;
+  border-radius: 8px;
+  background: #fffaf4;
+  color: #2d1d15;
+}
+
+.telegram-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.telegram-group-list {
+  display: grid;
+  gap: 10px;
+}
+
+.telegram-group-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e5cbb8;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+}
+
+.telegram-group-card.is-disabled {
+  opacity: 0.6;
+}
+
+.telegram-group-card h4 {
+  margin: 0 0 4px;
+  color: #2d1d15;
+  font-size: 15px;
+}
+
+.telegram-group-card p,
+.telegram-group-card small {
+  display: block;
+  color: #9c7a68;
+  font-size: 12px;
+}
+
+.telegram-group-state {
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: #3f7d47;
+  background: #eef8ea;
+  font-size: 12px;
+}
+
+.telegram-group-card.is-disabled .telegram-group-state {
+  color: #9c7a68;
+  background: #f8eee6;
+}
+
+.telegram-group-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.telegram-group-actions button {
+  border: 0;
+  border-radius: 6px;
+  background: #7d3d27;
+  color: #fff;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.telegram-group-actions .is-danger {
+  background: #8b2522;
+}
+
+.telegram-send-course {
+  border: 1px solid #e5cbb8;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.telegram-send-course h4 {
+  margin: 4px 0 6px;
+  color: #2d1d15;
+  font-size: 18px;
+}
+
+.telegram-send-course span {
+  color: #9c7a68;
+}
+
+.telegram-group-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.telegram-send-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e5cbb8;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+  color: #2d1d15;
+}
+
+.telegram-send-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #c7542c;
+}
+
+.telegram-send-check span {
+  display: grid;
+  gap: 3px;
+}
+
+.telegram-send-check small {
+  color: #9c7a68;
 }
 
 .message-drawer {
@@ -2609,6 +2792,15 @@ textarea:focus {
     padding: 10px 15px;
   }
 
+  .admin-head-actions {
+    gap: 8px;
+  }
+
+  .admin-config-button {
+    border-radius: 8px;
+    padding: 9px 12px;
+  }
+
   .admin-table {
     display: grid;
     gap: 12px;
@@ -2684,6 +2876,24 @@ textarea:focus {
   .admin-icon-action {
     padding: 7px 10px;
     font-size: 13px;
+  }
+
+  .telegram-panel-head,
+  .telegram-group-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .telegram-panel-head {
+    display: grid;
+  }
+
+  .telegram-group-actions {
+    flex-wrap: wrap;
+  }
+
+  .telegram-group-checks {
+    grid-template-columns: 1fr;
   }
 
   .message-panel {

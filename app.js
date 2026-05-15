@@ -19,6 +19,9 @@ const state = {
   reminders: new Set(),
   messagesRead: false,
   notifications: [],
+  telegramConfig: { botConfigured: false, botSource: "", groups: [] },
+  telegramTargetCourseId: "",
+  telegramSelectedGroups: new Set(),
   courses: [
     {
       id: "c1",
@@ -1320,7 +1323,7 @@ function renderAdminCourseItem(course) {
 }
 
 function showAdminPanel(panelId, shouldScroll = true) {
-  ["adminListPanel", "courseFormPanel", "assetFormPanel", "adminReviewPanel"].forEach((id) => {
+  ["adminListPanel", "courseFormPanel", "assetFormPanel", "adminReviewPanel", "telegramConfigPanel", "telegramSendPanel"].forEach((id) => {
     const panel = $(`#${id}`);
     if (panel) panel.hidden = id !== panelId;
   });
@@ -1349,6 +1352,82 @@ function renderAdminReviewPanel(course) {
       `).join("") : `<div class="empty-state">暂无学员评价</div>`}
     </div>
   `;
+}
+
+function renderTelegramConfig() {
+  const { botConfigured, botSource, groups } = state.telegramConfig;
+  $("#telegramBotStatus").textContent = botConfigured
+    ? `Bot 已配置${botSource === "env" ? "（环境变量）" : ""}`
+    : "未配置 Bot";
+  $("#telegramBotStatus").classList.toggle("is-ready", botConfigured);
+  $("#telegramGroupList").innerHTML = groups.length
+    ? groups.map((group) => `
+      <article class="telegram-group-card ${group.enabled ? "" : "is-disabled"}">
+        <div>
+          <h4>${group.name}</h4>
+          <p>${group.chatId}</p>
+          ${group.description ? `<small>${group.description}</small>` : ""}
+        </div>
+        <span class="telegram-group-state">${group.enabled ? "启用" : "停用"}</span>
+        <div class="telegram-group-actions">
+          <button type="button" data-tg-action="toggle" data-group="${group.id}">${group.enabled ? "停用" : "启用"}</button>
+          <button type="button" data-tg-action="edit" data-group="${group.id}">编辑</button>
+          <button type="button" class="is-danger" data-tg-action="delete" data-group="${group.id}">删除</button>
+        </div>
+      </article>
+    `).join("")
+    : `<div class="empty-state">还没有配置 TG 群。添加 Bot 进群后，在这里填写群名称和 Chat ID。</div>`;
+}
+
+function resetTelegramGroupForm() {
+  $("#telegramGroupId").value = "";
+  $("#telegramGroupName").value = "";
+  $("#telegramChatId").value = "";
+  $("#telegramGroupDescription").value = "";
+  $("#telegramGroupEnabled").checked = true;
+  $("#cancelTelegramGroupEdit").textContent = "清空";
+}
+
+function fillTelegramGroupForm(group) {
+  $("#telegramGroupId").value = group.id;
+  $("#telegramGroupName").value = group.name;
+  $("#telegramChatId").value = group.chatId;
+  $("#telegramGroupDescription").value = group.description || "";
+  $("#telegramGroupEnabled").checked = group.enabled;
+  $("#cancelTelegramGroupEdit").textContent = "取消编辑";
+}
+
+function renderTelegramSendPanel(course) {
+  const enabledGroups = state.telegramConfig.groups.filter((group) => group.enabled);
+  $("#telegramSendCourse").innerHTML = course
+    ? `
+      <p class="eyebrow">本次发送课程</p>
+      <h4>${course.title}</h4>
+      <span>${course.startAt.slice(0, 10)} · ${course.teacher}</span>
+    `
+    : "";
+  if (!state.telegramConfig.botConfigured || !enabledGroups.length) {
+    $("#telegramSendGroupChecks").innerHTML = `
+      <div class="empty-state">请先完成 Bot Token 和至少一个启用群的配置。</div>
+    `;
+    $("#sendTelegramNow").disabled = true;
+    $("#sendTelegramNow").textContent = "先配置 TG 群";
+    return;
+  }
+  if (!state.telegramSelectedGroups.size) {
+    state.telegramSelectedGroups = new Set(enabledGroups.map((group) => group.id));
+  }
+  $("#telegramSendGroupChecks").innerHTML = enabledGroups.map((group) => `
+    <label class="telegram-send-check">
+      <input type="checkbox" value="${group.id}" ${state.telegramSelectedGroups.has(group.id) ? "checked" : ""} />
+      <span>
+        <strong>${group.name}</strong>
+        <small>${group.description || group.chatId}</small>
+      </span>
+    </label>
+  `).join("");
+  $("#sendTelegramNow").disabled = false;
+  $("#sendTelegramNow").textContent = `发送到选中 TG 群`;
 }
 
 function updateAssetStatus() {
@@ -1389,6 +1468,17 @@ async function loadNotifications() {
   const data = await apiFetch("/api/notifications");
   state.notifications = data.notifications || [];
   renderReminderBadge();
+}
+
+async function loadTelegramConfig() {
+  if (!state.token || !state.isAdmin) return;
+  const data = await apiFetch("/api/telegram");
+  state.telegramConfig = {
+    botConfigured: Boolean(data.botConfigured),
+    botSource: data.botSource || "",
+    groups: data.groups || [],
+  };
+  renderTelegramConfig();
 }
 
 function restoreCachedCourses() {
@@ -1807,6 +1897,24 @@ function bindEvents() {
     showAdminPanel("courseFormPanel");
   });
 
+  $("#openTelegramConfig").addEventListener("click", async () => {
+    showAdminPanel("telegramConfigPanel");
+    try {
+      await loadTelegramConfig();
+    } catch (error) {
+      showToast(error.message || "TG 配置加载失败");
+    }
+  });
+
+  $("#jumpTelegramConfig").addEventListener("click", async () => {
+    showAdminPanel("telegramConfigPanel");
+    try {
+      await loadTelegramConfig();
+    } catch (error) {
+      showToast(error.message || "TG 配置加载失败");
+    }
+  });
+
   $$("[data-admin-back]").forEach((button) => {
     button.addEventListener("click", () => showAdminPanel("adminListPanel"));
   });
@@ -1841,6 +1949,129 @@ function bindEvents() {
   });
 
   $("#morePositionChecks").addEventListener("change", updateMorePositionButton);
+
+  $("#telegramBotForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const botToken = $("#telegramBotToken").value.trim();
+    if (!botToken) {
+      showToast("请输入 Telegram Bot Token");
+      return;
+    }
+    const button = $("#telegramBotForm button[type='submit']");
+    button.disabled = true;
+    button.textContent = "保存中...";
+    try {
+      await apiFetch("/api/telegram", {
+        method: "POST",
+        body: JSON.stringify({ action: "saveBot", botToken }),
+      });
+      $("#telegramBotToken").value = "";
+      await loadTelegramConfig();
+      showToast("TG Bot Token 已保存");
+    } catch (error) {
+      showToast(error.message || "Bot Token 保存失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = "保存 Bot Token";
+    }
+  });
+
+  $("#telegramGroupForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const group = {
+      id: $("#telegramGroupId").value,
+      name: $("#telegramGroupName").value.trim(),
+      chatId: $("#telegramChatId").value.trim(),
+      description: $("#telegramGroupDescription").value.trim(),
+      enabled: $("#telegramGroupEnabled").checked,
+    };
+    const button = $("#telegramGroupForm button[type='submit']");
+    button.disabled = true;
+    button.textContent = "保存中...";
+    try {
+      await apiFetch("/api/telegram", {
+        method: "POST",
+        body: JSON.stringify({ action: "saveGroup", group }),
+      });
+      resetTelegramGroupForm();
+      await loadTelegramConfig();
+      showToast("TG 群配置已保存");
+    } catch (error) {
+      showToast(error.message || "TG 群配置保存失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = "保存群配置";
+    }
+  });
+
+  $("#cancelTelegramGroupEdit").addEventListener("click", resetTelegramGroupForm);
+
+  $("#telegramGroupList").addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-tg-action]");
+    if (!button) return;
+    const group = state.telegramConfig.groups.find((item) => item.id === button.dataset.group);
+    if (!group) return;
+    if (button.dataset.tgAction === "edit") {
+      fillTelegramGroupForm(group);
+      $("#telegramGroupName").focus();
+      return;
+    }
+    button.disabled = true;
+    try {
+      if (button.dataset.tgAction === "toggle") {
+        await apiFetch("/api/telegram", {
+          method: "POST",
+          body: JSON.stringify({ action: "saveGroup", group: { ...group, enabled: !group.enabled } }),
+        });
+        showToast(group.enabled ? "TG 群已停用" : "TG 群已启用");
+      }
+      if (button.dataset.tgAction === "delete") {
+        await apiFetch("/api/telegram", {
+          method: "POST",
+          body: JSON.stringify({ action: "deleteGroup", groupId: group.id }),
+        });
+        showToast("TG 群已删除");
+      }
+      await loadTelegramConfig();
+    } catch (error) {
+      showToast(error.message || "TG 群操作失败");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $("#telegramSendGroupChecks").addEventListener("change", () => {
+    state.telegramSelectedGroups = new Set($$("#telegramSendGroupChecks input:checked").map((input) => input.value));
+  });
+
+  $("#sendTelegramNow").addEventListener("click", async () => {
+    const course = state.courses.find((item) => item.id === state.telegramTargetCourseId);
+    const groupIds = [...state.telegramSelectedGroups];
+    if (!course) {
+      showToast("请选择要发送的课程");
+      return;
+    }
+    if (!groupIds.length) {
+      showToast("请选择至少一个 TG 群");
+      return;
+    }
+    const button = $("#sendTelegramNow");
+    button.disabled = true;
+    button.textContent = "发送中...";
+    try {
+      const data = await apiFetch("/api/telegram", {
+        method: "POST",
+        body: JSON.stringify({ action: "send", courseId: course.id, groupIds }),
+      });
+      const failedText = data.failed?.length ? `，${data.failed.length} 个群失败` : "";
+      showToast(`已发送到 ${data.sent?.length || 0} 个 TG 群${failedText}`);
+    } catch (error) {
+      showToast(error.message || "TG 群通知发送失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = "发送到选中 TG 群";
+    }
+  });
 
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".position-picker")) setMorePositionsVisible(false);
@@ -1961,20 +2192,15 @@ function bindEvents() {
       return;
     }
     if (button.dataset.adminAction === "telegram") {
-      button.disabled = true;
-      const originalText = button.textContent;
-      button.textContent = "发送中";
+      state.telegramTargetCourseId = course.id;
+      state.telegramSelectedGroups = new Set();
+      showAdminPanel("telegramSendPanel");
       try {
-        await apiFetch("/api/telegram", {
-          method: "POST",
-          body: JSON.stringify({ courseId: course.id }),
-        });
-        showToast(`已发送《${course.title}》到 TG 群`);
+        await loadTelegramConfig();
+        renderTelegramSendPanel(course);
       } catch (error) {
-        showToast(error.message || "TG 群通知发送失败");
-      } finally {
-        button.disabled = false;
-        button.textContent = originalText;
+        renderTelegramSendPanel(course);
+        showToast(error.message || "TG 配置加载失败");
       }
       return;
     }
