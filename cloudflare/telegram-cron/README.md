@@ -1,6 +1,6 @@
 # Telegram Cron Worker
 
-This Worker wakes the Vercel API every 5 minutes so the app can deliver automatic Telegram reminders.
+This Worker wakes the Vercel API every 5 minutes so the app can deliver automatic Telegram reminders. It has no public HTTP route; the Cron Trigger is the only production entrypoint.
 
 ## Required variables
 

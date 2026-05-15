@@ -24,15 +24,4 @@ export default {
   async scheduled(_controller, env, ctx) {
     ctx.waitUntil(triggerNotifications(env));
   },
-
-  async fetch(_request, env) {
-    try {
-      const body = await triggerNotifications(env);
-      return new Response(body, {
-        headers: { "content-type": "application/json; charset=utf-8" },
-      });
-    } catch (error) {
-      return Response.json({ ok: false, error: error.message }, { status: 500 });
-    }
-  },
 };
