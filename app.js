@@ -1360,6 +1360,7 @@ function renderTelegramConfig() {
     ? `Bot 已配置${botSource === "env" ? "（环境变量）" : ""}`
     : "未配置 Bot";
   $("#telegramBotStatus").classList.toggle("is-ready", botConfigured);
+  $("#telegramGroupCount").textContent = `${groups.length} 个`;
   $("#telegramGroupList").innerHTML = groups.length
     ? groups.map((group) => `
       <article class="telegram-group-card ${group.enabled ? "" : "is-disabled"}">
@@ -1386,6 +1387,7 @@ function resetTelegramGroupForm() {
   $("#telegramGroupDescription").value = "";
   $("#telegramGroupEnabled").checked = true;
   $("#cancelTelegramGroupEdit").textContent = "清空";
+  $("#telegramGroupEditorTitle").textContent = "新增 TG 群";
 }
 
 function fillTelegramGroupForm(group) {
@@ -1395,6 +1397,7 @@ function fillTelegramGroupForm(group) {
   $("#telegramGroupDescription").value = group.description || "";
   $("#telegramGroupEnabled").checked = group.enabled;
   $("#cancelTelegramGroupEdit").textContent = "取消编辑";
+  $("#telegramGroupEditorTitle").textContent = "编辑 TG 群";
 }
 
 function renderTelegramSendPanel(course) {
@@ -2005,6 +2008,10 @@ function bindEvents() {
   });
 
   $("#cancelTelegramGroupEdit").addEventListener("click", resetTelegramGroupForm);
+  $("#newTelegramGroup").addEventListener("click", () => {
+    resetTelegramGroupForm();
+    $("#telegramGroupName").focus();
+  });
 
   $("#telegramGroupList").addEventListener("click", async (event) => {
     const button = event.target.closest("[data-tg-action]");

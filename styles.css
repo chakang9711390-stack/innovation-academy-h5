@@ -1506,6 +1506,43 @@ h1 {
   color: #2d1d15;
 }
 
+.telegram-subhead,
+.telegram-list-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.telegram-subhead h4,
+.telegram-list-head h4 {
+  margin: 0;
+  color: #2d1d15;
+  font-size: 16px;
+}
+
+.telegram-subhead p {
+  margin-top: 4px;
+  color: #9c7a68;
+  font-size: 13px;
+}
+
+.telegram-list-head span {
+  margin-left: 6px;
+  color: #9c7a68;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.telegram-add-button {
+  flex: 0 0 auto;
+  border: 1px solid #e5cbb8;
+  border-radius: 999px;
+  background: #fff7ef;
+  color: #7d3d27;
+  padding: 8px 12px;
+}
+
 .telegram-toggle {
   display: flex;
   align-items: center;
@@ -2886,6 +2923,14 @@ textarea:focus {
 
   .telegram-panel-head {
     display: grid;
+  }
+
+  .telegram-subhead {
+    display: grid;
+  }
+
+  .telegram-add-button {
+    justify-self: start;
   }
 
   .telegram-group-actions {
