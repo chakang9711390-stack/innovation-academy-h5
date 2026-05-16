@@ -739,7 +739,7 @@ function renderEventCard(course) {
           <ul class="scenario-list">${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
         </div>
         <div class="event-card-actions">
-          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">加入会议</a>` : `<span></span>`}
+          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer" aria-label="加入会议" title="加入会议">↗</a>` : `<span></span>`}
           <button class="calendar-reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>
         </div>
       </span>
@@ -759,19 +759,19 @@ function renderCourses() {
 function renderSquarePositionFilter() {
   const mainPositions = ["运维", "研发", "测试", "产品"];
   const morePositions = POSITION_OPTIONS.filter((position) => !mainPositions.includes(position));
-  const extraCount = state.extraPositionFilters.size;
-  const hasSelectedPositions = state.mainPositionFilters.size > 0 || extraCount > 0;
+  const selectedPosition = state.positionFilter;
+  const extraSelected = morePositions.includes(selectedPosition);
   $("#squarePositionFilter").innerHTML = `
-    <button class="filter-chip ${!hasSelectedPositions ? "is-active" : ""}" type="button" data-position-filter="全部">全部</button>
-    ${mainPositions.map((position) => `<button class="filter-chip ${state.mainPositionFilters.has(position) ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`).join("")}
+    <button class="filter-chip ${selectedPosition === "全部" ? "is-active" : ""}" type="button" data-position-filter="全部">全部</button>
+    ${mainPositions.map((position) => `<button class="filter-chip ${selectedPosition === position ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`).join("")}
     <span class="square-more-wrap">
-      <button class="filter-chip more-positions ${state.squareMorePositionsVisible ? "is-open" : ""}" id="toggleSquareMorePositions" type="button" aria-expanded="${state.squareMorePositionsVisible}">
-        ${extraCount ? `更多岗位（${extraCount}）` : "更多岗位"}
+      <button class="filter-chip more-positions ${state.squareMorePositionsVisible || extraSelected ? "is-open" : ""}" id="toggleSquareMorePositions" type="button" aria-expanded="${state.squareMorePositionsVisible}">
+        ${extraSelected ? selectedPosition : "更多岗位"}
       </button>
       <span class="more-position-menu square-more-position-menu" id="squareMorePositionChecks" ${state.squareMorePositionsVisible ? "" : "hidden"}>
         ${morePositions.map((position) => `
-          <label class="position-menu-item ${state.extraPositionFilters.has(position) ? "is-selected" : ""}">
-            <input type="checkbox" value="${position}" ${state.extraPositionFilters.has(position) ? "checked" : ""} data-square-extra-position />
+          <label class="position-menu-item ${selectedPosition === position ? "is-selected" : ""}">
+            <input type="radio" name="squareExtraPosition" value="${position}" ${selectedPosition === position ? "checked" : ""} data-square-extra-position />
             <span>${position}</span>
           </label>
         `).join("")}
@@ -781,13 +781,9 @@ function renderSquarePositionFilter() {
 }
 
 function courseMatchesPosition(course, position) {
-  const selected = [
-    ...state.mainPositionFilters,
-    ...state.extraPositionFilters,
-  ];
-  if (!selected.length && position && position !== "全部") selected.push(position);
-  if (!selected.length) return true;
-  return selected.some((target) => course.positions.some((item) => item === target || item.includes(target) || target.includes(item)));
+  const selected = position || state.positionFilter;
+  if (!selected || selected === "全部") return true;
+  return course.positions.some((item) => item === selected || item.includes(selected) || selected.includes(item));
 }
 
 function renderCourseCard(course, issueIndex = 0) {
@@ -860,8 +856,7 @@ function renderCourseDetailPage(course) {
         <button class="detail-download-secondary" type="button" data-action="downloadVideo" data-course="${course.id}" ${course.replayUrl ? "" : 'disabled title="视频上传中"'}>下载视频</button>
         ${course.replayUrl && !isVideoUrl(course.replayUrl) ? `<button class="detail-link-button" type="button" data-action="replay" data-course="${course.id}">打开回放链接</button>` : ""}
       </div>
-    </article>
-    <article class="detail-review-card">
+      <section class="detail-review-card">
       <div class="detail-review-head">
         <h3>课程评价<span>（${reviews.length}条）</span></h3>
         <strong>${average ? average.toFixed(1) : "0.0"} <span>★★★★★</span></strong>
@@ -869,6 +864,7 @@ function renderCourseDetailPage(course) {
       <div class="detail-review-list">
         ${reviews.length ? reviews.map(renderCourseReview).join("") : `<p class="empty-review">暂无评价</p>`}
       </div>
+      </section>
     </article>
   `;
 }
@@ -909,7 +905,7 @@ function renderRecords() {
   $("#learnedCount").textContent = records.length;
   $("#learnedHours").textContent = formatLearningDuration(totalMs);
   $$(".learning-tab").forEach((button) => button.classList.toggle("is-active", button.dataset.recordMode === state.recordMode));
-  $("#learningStats").hidden = state.recordMode !== "learning";
+  $("#learningStats").hidden = true;
   $("#reservationList").hidden = state.recordMode !== "reservations";
   $("#recordList").hidden = state.recordMode !== "learning";
   $("#reservationList").innerHTML = reservations.length
@@ -1844,32 +1840,21 @@ function bindEvents() {
     if (!button) return;
     event.stopPropagation();
     const position = button.dataset.positionFilter;
-    if (position === "全部") {
-      state.mainPositionFilters.clear();
-      state.extraPositionFilters.clear();
-      state.positionFilter = "全部";
-      state.squareMorePositionsVisible = false;
-      renderCourses();
-      return;
-    }
-    if (state.mainPositionFilters.has(position)) {
-      state.mainPositionFilters.delete(position);
-    } else {
-      state.mainPositionFilters.add(position);
-    }
-    state.positionFilter = state.mainPositionFilters.size || state.extraPositionFilters.size ? "自定义" : "全部";
+    state.mainPositionFilters.clear();
+    state.extraPositionFilters.clear();
+    state.positionFilter = position;
+    state.squareMorePositionsVisible = false;
     renderCourses();
   });
   $("#squarePositionFilter").addEventListener("change", (event) => {
     const input = event.target.closest("[data-square-extra-position]");
     if (!input) return;
     event.stopPropagation();
-    if (input.checked) {
-      state.extraPositionFilters.add(input.value);
-    } else {
-      state.extraPositionFilters.delete(input.value);
-    }
-    state.positionFilter = state.mainPositionFilters.size || state.extraPositionFilters.size ? "自定义" : "全部";
+    state.mainPositionFilters.clear();
+    state.extraPositionFilters.clear();
+    if (input.checked) state.extraPositionFilters.add(input.value);
+    state.positionFilter = input.value;
+    state.squareMorePositionsVisible = false;
     renderCourses();
   });
 

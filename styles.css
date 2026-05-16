@@ -267,6 +267,58 @@ h1 {
   border-bottom-color: var(--mint);
 }
 
+.primary-button,
+.calendar-reserve-button,
+.filter-chip.is-active,
+.learning-tab.is-active {
+  background: linear-gradient(135deg, #8d59ff, #6f37ea);
+  border-color: transparent;
+}
+
+#calendarView .filter-chip {
+  border-color: var(--line);
+  background: #fff;
+  color: var(--muted);
+}
+
+#calendarView .filter-chip.is-active {
+  background: linear-gradient(135deg, #8d59ff, #6f37ea);
+  color: #fff;
+}
+
+#calendarView .event-list::before {
+  background: var(--line);
+}
+
+#calendarView .event-card {
+  border-color: var(--line);
+  background: #fff;
+}
+
+#calendarView .timeline-dot {
+  border-color: #efe9ff;
+  background: var(--mint);
+}
+
+#calendarView .strong-date,
+.calendar-detail-block strong {
+  color: var(--muted);
+}
+
+.calendar-detail-block li::before {
+  color: var(--mint);
+}
+
+#calendarView .event-card-actions {
+  border-top-color: var(--line);
+}
+
+#calendarView .tag,
+.tag {
+  background: #f0ebff;
+  color: var(--mint-deep);
+}
+
 .view {
   display: none;
   padding: 24px 28px 0;
@@ -4188,5 +4240,173 @@ h1 {
   #recordsView #recordList.learning-card-grid,
   #recordsView #learningStats.stats-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Purple refresh matching the latest mobile prototype */
+:root {
+  --bg: #f5f2ff;
+  --surface: #ffffff;
+  --surface-soft: #f3efff;
+  --panel: #ffffff;
+  --panel-soft: #f8f6ff;
+  --line: #ddd5ff;
+  --line-strong: #c8bbff;
+  --text: #25193a;
+  --muted: #74698a;
+  --subtle: #8f86a6;
+  --mint: #7f42ff;
+  --mint-deep: #5d2bd8;
+  --blue: #7155ff;
+  --blue-soft: #ede8ff;
+  --green-soft: #efe9ff;
+  --cream: #faf8ff;
+  --ink: #25193a;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(127, 66, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, #fbfaff 0%, #f6f2ff 100%);
+}
+
+.topbar {
+  background: linear-gradient(135deg, #ffffff 0%, #f3efff 100%);
+}
+
+.topbar .pill {
+  display: none;
+}
+
+.reminder-badge span {
+  background: var(--mint);
+  box-shadow: 0 0 0 5px rgba(127, 66, 255, 0.15);
+}
+
+.tab.is-active {
+  color: var(--mint-deep);
+  border-bottom-color: var(--mint);
+}
+
+.calendar-live-link {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8e5cff, #6a35e8);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.calendar-live-link::before {
+  display: none;
+}
+
+.detail-info-card {
+  overflow: hidden;
+}
+
+.detail-review-card {
+  margin-top: 15px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  padding: 15px 0 0;
+}
+
+#squareView .square-filter .filter-chip {
+  border-color: var(--line);
+  background: #fff;
+  color: var(--muted);
+}
+
+#squareView .square-filter .filter-chip.is-active {
+  color: #fff;
+  background: linear-gradient(135deg, #8d59ff, #6f37ea);
+  border-color: transparent;
+}
+
+#squareView .square-filter .more-positions.is-open,
+#squareView .square-filter .more-positions[aria-expanded="true"] {
+  color: var(--mint-deep);
+  background: #fff;
+  border-color: var(--line-strong);
+}
+
+#squareView .square-more-position-menu,
+#squareView .prototype-card,
+#recordsView .learning-course-card,
+#recordsView .learning-tabs {
+  border-color: var(--line);
+}
+
+#squareView .prototype-card,
+#recordsView .learning-course-card {
+  background: #fff;
+}
+
+#squareView .prototype-card .tag,
+#recordsView .learning-course-body .tag {
+  background: #f0ebff;
+  color: var(--mint-deep);
+}
+
+#recordsView #learningStats.stats-grid {
+  display: none !important;
+}
+
+#recordsView .learning-tabs {
+  background: #f2edff;
+}
+
+#recordsView .learning-tab.is-active,
+#recordsView .learning-card-action,
+#recordsView #recordList .learning-card-action {
+  background: linear-gradient(135deg, #8d59ff, #6f37ea);
+}
+
+#recordsView #recordList .learning-card-action.is-rated {
+  background: #5a2bd2;
+}
+
+@media (max-width: 520px) {
+  .topbar {
+    min-height: 0;
+    padding: 14px 16px 12px;
+    align-items: center;
+  }
+
+  .topbar > div:first-child .eyebrow {
+    display: none;
+  }
+
+  .topbar h1 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .reminder-badge,
+  .user-badge {
+    min-height: 36px;
+    padding: 7px 11px;
+    font-size: 13px;
+  }
+
+  .reminder-badge {
+    min-width: 42px;
+  }
+
+  .tab {
+    font-size: 14px;
+    padding: 15px 6px 12px;
   }
 }
