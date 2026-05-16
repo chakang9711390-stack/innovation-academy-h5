@@ -4410,3 +4410,409 @@ body {
     padding: 15px 6px 12px;
   }
 }
+
+/* Bright gradient prototype pass */
+:root {
+  --bg: #f5f3ff;
+  --surface: #ffffff;
+  --surface-soft: #f3f0ff;
+  --panel: #ffffff;
+  --panel-soft: #f8f7ff;
+  --line: #ddd6ff;
+  --line-strong: #cfc2ff;
+  --text: #24183a;
+  --muted: #776c94;
+  --subtle: #9a91af;
+  --mint: #8d3cff;
+  --mint-deep: #6527db;
+  --accent-pink: #ec3f9d;
+  --blue: #6d58ff;
+  --blue-soft: #eee9ff;
+  --green-soft: #e9fff7;
+  --cream: #fbfaff;
+  --ink: #24183a;
+}
+
+body {
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(141, 60, 255, 0.18), transparent 26%),
+    radial-gradient(circle at 90% 0%, rgba(236, 63, 157, 0.12), transparent 24%),
+    linear-gradient(180deg, #fbfaff 0%, #f4f1ff 100%);
+}
+
+.app-shell {
+  background: #f8f7ff;
+  border-color: rgba(141, 60, 255, 0.12);
+}
+
+.topbar,
+.tabs {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: var(--line);
+}
+
+.topbar h1,
+.section-title h3,
+.detail-info-card h3,
+.rating-page-card h3,
+.profile-head h3,
+.admin-page-head h3 {
+  color: var(--text);
+}
+
+.user-badge,
+.reminder-badge,
+.ghost-button,
+.filter-chip,
+.learning-tabs,
+.detail-back {
+  border-color: var(--line);
+}
+
+.user-badge {
+  color: #fff;
+  background: linear-gradient(135deg, #7d48ff, #cc3db7);
+}
+
+.reminder-badge {
+  color: var(--mint-deep);
+  background: #fff;
+}
+
+.tab {
+  color: #8c82a8;
+}
+
+.tab.is-active {
+  color: var(--mint-deep);
+}
+
+.tab.is-active::after {
+  background: linear-gradient(90deg, #7b45ff, #ec3f9d);
+}
+
+.filter-chip.is-active,
+.calendar-reserve-button,
+.learning-tab.is-active,
+.primary-button,
+.admin-publish-button,
+.rating-submit-button,
+.detail-download-primary {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+.calendar-panel {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.timeline-course {
+  border-color: var(--line);
+  background: #fff;
+}
+
+.timeline-course::before {
+  background: linear-gradient(180deg, #7b45ff, #ec3f9d);
+}
+
+.timeline-dot {
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+.timeline-course h4,
+.prototype-card-body h4,
+.learning-course-body h4 {
+  color: var(--text);
+}
+
+.tag,
+.prototype-card .tag,
+.detail-info-card .tag,
+#squareView .prototype-card .tag,
+#recordsView .learning-course-body .tag {
+  border: 0;
+  color: var(--mint-deep);
+  background: #efe9ff;
+}
+
+.calendar-live-link {
+  width: 34px;
+  height: 34px;
+  font-size: 15px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+#squareView .square-filter .filter-chip,
+.calendar-filters .filter-chip {
+  color: var(--muted);
+  background: #fff;
+  border-color: var(--line);
+}
+
+#squareView .square-filter .filter-chip.is-active,
+.calendar-filters .filter-chip.is-active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+#squareView .prototype-card,
+#recordsView .learning-course-card {
+  border-color: var(--line);
+}
+
+#squareView .prototype-cover,
+#recordsView .learning-course-card .prototype-cover {
+  background: var(--course-cover-bg);
+}
+
+.prototype-cover-copy {
+  display: grid;
+  gap: 7px;
+}
+
+.prototype-cover-copy span {
+  justify-self: start;
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#squareView .prototype-cover-copy strong,
+#recordsView .learning-course-card .prototype-cover-copy strong {
+  border-radius: 7px;
+  background: rgba(21, 15, 45, 0.78);
+}
+
+.detail-info-card {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border-color: var(--line);
+  overflow: hidden;
+}
+
+.detail-info-card > :not(.detail-video-shell) {
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+.detail-info-card > h3 {
+  margin-top: 16px;
+}
+
+.detail-video-shell {
+  border-radius: 0;
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+.detail-video,
+.detail-video-placeholder {
+  background-color: #5821aa;
+}
+
+.detail-review-card {
+  margin-bottom: 16px;
+}
+
+#recordsView .learning-tabs {
+  background: #ece6ff;
+}
+
+#recordsView .learning-card-action,
+#recordsView #recordList .learning-card-action,
+#recordsView #recordList .learning-card-action.is-rated {
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+.rating-field,
+.rating-page-card,
+.detail-info-card,
+.profile-dialog,
+.admin-course-row,
+.manage-panel {
+  border-color: var(--line);
+}
+
+.message-head {
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    padding: 15px 18px 12px;
+  }
+
+  .topbar h1 {
+    color: var(--mint-deep);
+    font-size: 21px;
+  }
+
+  .user-badge {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    overflow: hidden;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .user-badge::before {
+    content: "K";
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .reminder-badge b {
+    display: none;
+  }
+
+  .reminder-badge {
+    position: relative;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+  }
+
+  .reminder-badge::before {
+    content: "🔔";
+    font-size: 17px;
+  }
+
+  .reminder-badge span {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    box-shadow: none;
+  }
+
+  .tabs {
+    justify-content: space-between;
+    padding: 0 10px;
+  }
+
+  .tab {
+    flex: 1 1 25%;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  #calendarView {
+    padding-top: 16px;
+  }
+
+  #calendarView .calendar-panel {
+    display: none;
+  }
+
+  #calendarView .section-title {
+    padding: 0 0 14px;
+  }
+
+  #calendarView .ghost-button {
+    display: none !important;
+  }
+
+  .calendar-filters {
+    margin-bottom: 16px;
+  }
+
+  .event-list {
+    gap: 14px;
+  }
+
+  .timeline-course {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 15px 14px 13px;
+    border-radius: 15px;
+  }
+
+  .timeline-course::before {
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 15px 0 0 15px;
+  }
+
+  .timeline-dot {
+    display: none;
+  }
+
+  .event-body h4 {
+    font-size: 16px;
+  }
+
+  .event-body .meta,
+  .calendar-detail-block,
+  .calendar-detail-block ul {
+    font-size: 12px;
+  }
+
+  .event-card-actions {
+    margin-top: 12px;
+  }
+
+  #squareView.is-active,
+  #recordsView.is-active {
+    padding: 18px 16px 28px;
+  }
+
+  #squareView .square-filter {
+    margin-bottom: 14px;
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+
+  #squareView .replay-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #squareView .prototype-cover,
+  #recordsView .learning-course-card .prototype-cover {
+    min-height: 118px;
+    height: 118px;
+  }
+
+  #squareView .prototype-card-body,
+  #recordsView .learning-course-body {
+    min-height: 90px;
+    padding: 11px;
+  }
+
+  #squareView .prototype-card-body h4,
+  #recordsView .learning-course-body h4 {
+    font-size: 14px;
+  }
+
+  #squareView .square-more-position-menu {
+    top: 126px;
+  }
+
+  #recordsView #reservationList.learning-card-grid,
+  #recordsView #recordList.learning-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .detail-back {
+    color: var(--mint-deep);
+  }
+}

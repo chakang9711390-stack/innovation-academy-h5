@@ -739,7 +739,7 @@ function renderEventCard(course) {
           <ul class="scenario-list">${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
         </div>
         <div class="event-card-actions">
-          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer" aria-label="加入会议" title="加入会议">↗</a>` : `<span></span>`}
+          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer" aria-label="加入会议" title="加入会议">▣</a>` : `<span></span>`}
           <button class="calendar-reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>
         </div>
       </span>
@@ -788,12 +788,18 @@ function courseMatchesPosition(course, position) {
 
 function renderCourseCard(course, issueIndex = 0) {
   const headline = course.content[0] || course.subtitle || course.title;
-  const coverThemes = ["#25385f", "#4a2507", "#233f12", "#3b1225", "#102f37", "#442d11"];
+  const coverThemes = [
+    "linear-gradient(145deg, #9c35ee, #4d28cf)",
+    "linear-gradient(145deg, #407cf4, #3b2ad1)",
+    "linear-gradient(145deg, #ff6c8d, #d43e9e)",
+    "linear-gradient(145deg, #56d5b7, #238eaa)",
+  ];
 
   return `
     <article class="course-card replay-tile prototype-card" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
       <div class="prototype-cover">
         <div class="prototype-cover-copy">
+          <span>第${issueIndex}期</span>
           <strong>${headline}</strong>
         </div>
       </div>
@@ -827,12 +833,12 @@ function renderCourseDetailPage(course) {
   const reviews = state.ratingDetails[course.id] || [];
   const average = reviews.length ? reviews.reduce((sum, item) => sum + Number(item.score || 0), 0) / reviews.length : 0;
   return `
-    <div class="detail-video-shell">
-      ${course.replayUrl && isVideoUrl(course.replayUrl)
-        ? `<video class="detail-video" src="${course.replayUrl}" controls playsinline poster="${course.coverUrl || ""}"></video>`
-        : `<div class="detail-video-placeholder" ${coverStyle(course)}><span>${course.replayUrl ? "第三方回放链接" : "回放上传中"}</span></div>`}
-    </div>
     <article class="detail-info-card">
+      <div class="detail-video-shell">
+        ${course.replayUrl && isVideoUrl(course.replayUrl)
+          ? `<video class="detail-video" src="${course.replayUrl}" controls playsinline poster="${course.coverUrl || ""}"></video>`
+          : `<div class="detail-video-placeholder" ${coverStyle(course)}><span>${course.replayUrl ? "第三方回放链接" : "回放上传中"}</span></div>`}
+      </div>
       <h3 id="courseDetailTitle">${course.title}</h3>
       <p class="detail-subtitle">${course.subtitle}</p>
       <p class="detail-time">◷ ${formatFullTime(course)}</p>
@@ -926,7 +932,12 @@ function formatLearningDuration(totalMs) {
 
 function renderLearningCourseCard(course, { type, issueIndex }) {
   const rating = state.ratings[course.id] || 0;
-  const coverThemes = ["#25385f", "#4a2507", "#233f12", "#3b1225", "#102f37", "#442d11"];
+  const coverThemes = [
+    "linear-gradient(145deg, #9c35ee, #4d28cf)",
+    "linear-gradient(145deg, #407cf4, #3b2ad1)",
+    "linear-gradient(145deg, #ff6c8d, #d43e9e)",
+    "linear-gradient(145deg, #56d5b7, #238eaa)",
+  ];
   const action = type === "reservation"
     ? `<button class="learning-card-action" type="button" data-action="cancelReminder" data-course="${course.id}">取消预约</button>`
     : `<button class="learning-card-action ${rating ? "is-rated" : ""}" type="button" data-action="openRating" data-course="${course.id}">${rating ? "查看评价" : "点评"}</button>`;
@@ -934,6 +945,7 @@ function renderLearningCourseCard(course, { type, issueIndex }) {
     <article class="learning-course-card" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
       <div class="prototype-cover">
         <div class="prototype-cover-copy">
+          <span>第${issueIndex}期</span>
           <strong>${course.content[0] || course.subtitle}</strong>
         </div>
       </div>
