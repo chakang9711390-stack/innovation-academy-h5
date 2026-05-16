@@ -4816,3 +4816,254 @@ body {
     color: var(--mint-deep);
   }
 }
+
+/* Final mobile prototype alignment */
+.admin-publish-button,
+.admin-config-button,
+.admin-action-button,
+.manage-panel .primary-button,
+.telegram-card .primary-button {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+}
+
+.manage-panel,
+.admin-course-row,
+.telegram-card,
+.admin-review-card {
+  background: #fff;
+  border-color: var(--line);
+}
+
+.calendar-live-link::before {
+  content: "";
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+  background: currentColor;
+  box-shadow: 7px 0 0 -2px currentColor;
+}
+
+.calendar-live-link {
+  color: #fff;
+}
+
+@media (max-width: 520px) {
+  body {
+    background: #f5f3ff;
+  }
+
+  .app-shell {
+    background: #f7f5ff;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    border-bottom: 0;
+    padding: 16px 16px 10px;
+    background: #fff;
+  }
+
+  .topbar > div:first-child {
+    min-width: 0;
+  }
+
+  .header-actions {
+    display: contents;
+  }
+
+  .user-badge {
+    order: 2;
+    border: 0;
+    background: linear-gradient(135deg, #7b45ff, #ec3f9d);
+    box-shadow: 0 8px 18px rgba(125, 72, 255, 0.2);
+  }
+
+  .reminder-badge {
+    order: 3;
+    border: 0;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .tabs {
+    min-height: 44px;
+    padding: 0 10px;
+    background: #fff;
+  }
+
+  .tab {
+    min-height: 44px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  #calendarView.is-active,
+  #squareView.is-active,
+  #recordsView.is-active,
+  #manageView.is-active {
+    padding: 14px 14px 26px;
+  }
+
+  #calendarView .section-title h3 {
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  .calendar-filters {
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .calendar-filters .filter-chip,
+  #squareView .square-filter .filter-chip {
+    min-height: 30px;
+    padding: 0 13px;
+    font-size: 12px;
+  }
+
+  .timeline-course {
+    border-radius: 14px;
+    padding: 13px 12px 12px;
+  }
+
+  .event-body h4 {
+    margin-bottom: 5px;
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .event-body .meta {
+    margin-bottom: 8px;
+  }
+
+  .calendar-detail-block strong {
+    font-size: 12px;
+  }
+
+  .calendar-detail-block ul {
+    margin-top: 4px;
+    gap: 4px;
+  }
+
+  .calendar-live-link,
+  .calendar-reserve-button {
+    min-height: 30px;
+  }
+
+  .calendar-live-link {
+    width: 30px;
+    height: 30px;
+  }
+
+  #squareView .square-filter {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  #squareView .section-title {
+    display: none;
+  }
+
+  #squareView .replay-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #squareView .prototype-cover,
+  #recordsView .learning-course-card .prototype-cover {
+    height: 104px;
+    min-height: 104px;
+  }
+
+  #squareView .prototype-cover-copy,
+  #recordsView .learning-course-card .prototype-cover-copy {
+    padding: 0 9px 9px;
+  }
+
+  #squareView .prototype-cover-copy strong,
+  #recordsView .learning-course-card .prototype-cover-copy strong {
+    font-size: 11px;
+  }
+
+  #squareView .prototype-card-body,
+  #recordsView .learning-course-body {
+    min-height: 76px;
+    padding: 10px;
+  }
+
+  #squareView .prototype-card-body h4,
+  #recordsView .learning-course-body h4 {
+    min-height: 34px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  #squareView .prototype-card-body .tag-row,
+  #recordsView .learning-course-body .tag-row {
+    padding-top: 8px;
+  }
+
+  #squareView .prototype-card .tag,
+  #recordsView .learning-course-body .tag {
+    padding: 4px 7px;
+    font-size: 11px;
+  }
+
+  .detail-info-card > :not(.detail-video-shell) {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .detail-info-card > h3 {
+    margin-top: 12px;
+    font-size: 16px;
+  }
+
+  .detail-subtitle,
+  .detail-time,
+  .detail-section,
+  .detail-review-card {
+    font-size: 12px;
+  }
+
+  .detail-video-shell {
+    min-height: 180px;
+  }
+
+  #recordsView .learning-tabs {
+    margin-bottom: 12px;
+  }
+
+  #recordsView #reservationList.learning-card-grid,
+  #recordsView #recordList.learning-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #recordsView .learning-course-footer {
+    padding: 8px;
+  }
+
+  #recordsView .learning-card-action {
+    min-width: 0;
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  #manageView .admin-page-head {
+    margin-bottom: 12px;
+  }
+
+  #manageView .admin-course-list {
+    gap: 10px;
+  }
+
+  #manageView .admin-course-row {
+    border-radius: 14px;
+  }
+}

@@ -739,7 +739,7 @@ function renderEventCard(course) {
           <ul class="scenario-list">${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
         </div>
         <div class="event-card-actions">
-          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer" aria-label="加入会议" title="加入会议">▣</a>` : `<span></span>`}
+          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer" aria-label="加入会议" title="加入会议"></a>` : `<span></span>`}
           <button class="calendar-reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>
         </div>
       </span>
@@ -753,7 +753,7 @@ function renderCourses() {
   const replayCourses = published.sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
   $("#upcomingCount").textContent = `${replayCourses.length} 门`;
-  $("#upcomingCourses").innerHTML = replayCourses.length ? replayCourses.map((course, index) => renderCourseCard(course, replayCourses.length - index - 1)).join("") : `<div class="empty-state">暂无课程回放</div>`;
+  $("#upcomingCourses").innerHTML = replayCourses.length ? replayCourses.map((course, index) => renderCourseCard(course, replayCourses.length - index)).join("") : `<div class="empty-state">暂无课程回放</div>`;
 }
 
 function renderSquarePositionFilter() {
