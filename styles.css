@@ -5898,3 +5898,278 @@ body {
     padding: 0;
   }
 }
+
+/* 2026-05-16 visual lock: match the supplied purple/pink H5 comps, not the older desktop UI. */
+:root {
+  --bg: #f7f6ff;
+  --surface: #ffffff;
+  --surface-soft: #f2efff;
+  --panel: #ffffff;
+  --panel-soft: #f6f4ff;
+  --line: #e5ddff;
+  --line-strong: #cbbcff;
+  --text: #241638;
+  --muted: #7c7196;
+  --subtle: #a79dbc;
+  --mint: #7a35ff;
+  --mint-deep: #6a2cf0;
+  --accent-pink: #ef3d97;
+}
+
+html {
+  background: #f7f6ff;
+}
+
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  background:
+    radial-gradient(circle at top left, rgba(126, 61, 255, 0.16), transparent 26%),
+    linear-gradient(180deg, #fbfaff 0%, #f6f4ff 100%);
+  color: var(--text);
+}
+
+.app-shell {
+  width: min(100vw, 390px);
+  min-height: 100vh;
+  background: #f7f6ff;
+  box-shadow: 0 24px 70px rgba(45, 27, 86, 0.14);
+}
+
+.topbar {
+  min-height: 66px;
+  padding: 16px 16px 11px;
+  border-bottom: 0;
+  background: #fff;
+}
+
+.topbar h1 {
+  color: #8f2cf1;
+  font-size: 21px;
+  letter-spacing: 0;
+}
+
+.user-badge {
+  height: 34px;
+  padding: 0 11px 0 7px;
+  background: linear-gradient(135deg, #7b3fff 0%, #ec419d 100%);
+}
+
+.reminder-badge {
+  border-radius: 999px;
+  color: #9e8bc8;
+}
+
+.tabs {
+  min-height: 46px;
+  padding: 0 12px;
+  border-bottom: 1px solid #efeaff;
+}
+
+.tab {
+  min-height: 46px;
+  font-size: 13px;
+}
+
+.view,
+#calendarView.is-active,
+#squareView.is-active,
+#recordsView.is-active,
+#manageView.is-active {
+  padding: 14px 16px 22px;
+}
+
+#calendarView .section-title {
+  padding-bottom: 11px;
+}
+
+#calendarView .section-title h3 {
+  color: var(--mint-deep);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.calendar-filters,
+#squareView .square-filter {
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.calendar-filters .filter-chip,
+#squareView .square-filter .filter-chip {
+  min-height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+#calendarView .event-list {
+  gap: 10px;
+}
+
+.timeline-course {
+  padding: 12px 12px 10px;
+  border: 1px solid #dfd5ff;
+  border-top: 3px solid transparent;
+  border-radius: 14px;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(90deg, #7b3fff, #ef3d97) border-box;
+}
+
+.timeline-course .timeline-dot {
+  background: linear-gradient(135deg, #8b3cff 0%, #ef3d97 100%);
+}
+
+.event-body h4 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.event-body .meta {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.calendar-detail-block {
+  margin-top: 10px;
+}
+
+.calendar-detail-block li::before {
+  content: "✓";
+  color: #d03dca;
+}
+
+.event-card-actions {
+  margin-top: 11px;
+}
+
+.calendar-live-link,
+.calendar-reserve-button,
+.learning-tab.is-active,
+.learning-card-action,
+.detail-download-primary,
+.detail-download-secondary,
+.detail-link-button,
+#manageView .admin-publish-button,
+#manageView .admin-config-button,
+#manageView .admin-action-button,
+#manageView .primary-button,
+.primary-button {
+  background: linear-gradient(135deg, #7a35ff 0%, #ef3d97 100%);
+}
+
+.calendar-reserve-button.is-reminded {
+  color: #8b80a5;
+  background: #f1eef9;
+}
+
+#squareView .square-filter {
+  flex-wrap: wrap;
+}
+
+#squareView .replay-grid,
+#recordsView #reservationList.learning-card-grid,
+#recordsView #recordList.learning-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#squareView .prototype-card,
+#recordsView .learning-course-card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+#squareView .prototype-cover,
+#recordsView .learning-course-card .prototype-cover {
+  height: 110px;
+  min-height: 110px;
+  padding: 10px;
+}
+
+#squareView .prototype-card-body,
+#recordsView .learning-course-body {
+  min-height: 76px;
+  padding: 10px;
+}
+
+#squareView .prototype-card-body h4,
+#recordsView .learning-course-body h4 {
+  min-height: 34px;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 13px;
+}
+
+.detail-info-card {
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.detail-video-shell {
+  min-height: 180px;
+}
+
+.detail-info-card > h3 {
+  font-size: 16px;
+}
+
+.detail-section h4,
+.detail-review-head h3 {
+  color: var(--mint-deep);
+}
+
+#recordsView .learning-tabs {
+  margin-bottom: 14px;
+}
+
+#recordsView .learning-course-footer {
+  padding: 9px 10px 10px;
+}
+
+#manageView .admin-page-head h3 {
+  font-size: 14px;
+}
+
+#manageView .admin-course-row {
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+#manageView .admin-course-main h4 {
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+#manageView .admin-actions {
+  gap: 6px;
+}
+
+.manage-panel,
+.telegram-card,
+.admin-editor-panel {
+  border-radius: 14px;
+}
+
+.publish-course-form label,
+.admin-editor-panel label {
+  font-size: 12px;
+}
+
+.publish-course-form input,
+.publish-course-form textarea,
+.admin-editor-panel input,
+.admin-editor-panel textarea,
+.admin-editor-panel select {
+  border-radius: 12px;
+}
+
+@media (min-width: 391px) {
+  body {
+    padding: 0;
+  }
+}
