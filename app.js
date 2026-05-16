@@ -429,7 +429,9 @@ function renderAuthState(options = {}) {
   const isLoggedIn = Boolean(state.currentUser);
   $("#authScreen").classList.toggle("is-hidden", isLoggedIn);
   $(".app-shell").classList.toggle("is-locked", !isLoggedIn);
-  $("#userBadge").textContent = isLoggedIn ? `${state.currentUser.username} · ${state.isAdmin ? "管理员" : "成员"}` : "未登录";
+  const userBadge = $("#userBadge");
+  userBadge.textContent = isLoggedIn ? state.currentUser.username : "未登录";
+  userBadge.dataset.initial = isLoggedIn ? state.currentUser.username.slice(0, 1).toUpperCase() : "?";
   renderTabs();
   $$(".view").forEach((view) => view.classList.remove("is-active"));
   $(`#${state.activeTab}View`).classList.add("is-active");
