@@ -5346,3 +5346,555 @@ body {
     background: linear-gradient(135deg, #7b45ff 0%, #ec419d 100%);
   }
 }
+
+/* Prototype-locked layout: keep the live H5 visually identical to the supplied mobile comps on every viewport. */
+:root {
+  --bg: #f5f3ff;
+  --surface: #ffffff;
+  --surface-soft: #f2efff;
+  --panel: #ffffff;
+  --panel-soft: #f7f5ff;
+  --line: #ddd6ff;
+  --line-strong: #cbbcff;
+  --text: #241638;
+  --muted: #72678c;
+  --subtle: #9288aa;
+  --mint: #7d3cff;
+  --mint-deep: #6025d9;
+  --accent-pink: #ec419d;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(126, 61, 255, 0.16), transparent 24%),
+    linear-gradient(180deg, #fbfaff 0%, #f4f1ff 100%);
+}
+
+.app-shell {
+  width: min(100vw, 390px);
+  min-height: 100vh;
+  padding-bottom: 24px;
+  border: 0;
+  background: #f7f5ff;
+  box-shadow: 0 24px 70px rgba(48, 27, 96, 0.1);
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 62px;
+  padding: 14px 16px 10px;
+  border-bottom: 0;
+  background: #fff;
+}
+
+.topbar > div:first-child {
+  min-width: 0;
+}
+
+.topbar .eyebrow {
+  display: none;
+}
+
+.topbar h1 {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--mint-deep);
+  font-weight: 800;
+}
+
+.header-actions {
+  display: contents;
+}
+
+.user-badge {
+  order: 2;
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  height: 34px;
+  gap: 7px;
+  align-items: center;
+  padding: 0 12px 0 8px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #7b45ff 0%, #cb3db8 100%);
+  box-shadow: 0 10px 20px rgba(123, 69, 255, 0.18);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-badge::before {
+  content: attr(data-initial);
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.reminder-badge {
+  order: 3;
+  position: relative;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.reminder-badge::before {
+  content: "🔔";
+  font-size: 16px;
+}
+
+.reminder-badge span {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent-pink);
+  box-shadow: none;
+}
+
+.reminder-badge b,
+.topbar .pill {
+  display: none;
+}
+
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  min-height: 44px;
+  padding: 0 10px;
+  background: #fff;
+}
+
+.tab {
+  min-height: 44px;
+  padding: 0 4px;
+  color: #9c8fbb;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tab.is-active {
+  color: var(--mint-deep);
+  border-bottom-color: var(--mint);
+}
+
+.view {
+  padding: 14px 16px 0;
+}
+
+#calendarView.is-active,
+#squareView.is-active,
+#recordsView.is-active,
+#manageView.is-active {
+  padding: 14px 16px 22px;
+}
+
+.calendar-panel,
+.monthbar,
+.weekday-row,
+.calendar-grid,
+#calendarView .ghost-button {
+  display: none;
+}
+
+#calendarView .section-title {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0 0 12px;
+}
+
+#calendarView .section-title h3 {
+  font-size: 12px;
+  color: var(--mint-deep);
+  font-weight: 800;
+}
+
+.calendar-filters,
+#squareView .square-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.calendar-filters .filter-chip,
+#squareView .square-filter .filter-chip {
+  min-height: 30px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--mint-deep);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-filters .filter-chip.is-active,
+#squareView .square-filter .filter-chip.is-active,
+.learning-tab.is-active {
+  color: #fff;
+  background: linear-gradient(135deg, #8a38ff 0%, #ec419d 100%);
+}
+
+#calendarView .event-list {
+  position: relative;
+  gap: 10px;
+  padding-left: 12px;
+}
+
+#calendarView .event-list::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 14px;
+  bottom: 14px;
+  width: 1px;
+  background: #eadfff;
+}
+
+.timeline-course {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 12px 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.timeline-course .timeline-dot {
+  position: absolute;
+  left: -14px;
+  top: 18px;
+  width: 9px;
+  height: 9px;
+  box-shadow: 0 0 0 5px #f7f5ff;
+}
+
+.event-body h4 {
+  font-size: 15px;
+  line-height: 1.28;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.event-body .meta {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #9b91af;
+}
+
+.event-body .tag-row {
+  margin-top: 8px;
+  gap: 6px;
+}
+
+.tag {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f1ebff;
+  color: var(--mint-deep);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.calendar-detail-block {
+  margin-top: 10px;
+  font-size: 11px;
+}
+
+.calendar-detail-block strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--mint-deep);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.calendar-detail-block ul {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.calendar-detail-block li::before {
+  content: "✓";
+  margin-right: 6px;
+  color: var(--accent-pink);
+}
+
+.event-card-actions {
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ece5ff;
+}
+
+.calendar-live-link {
+  display: inline-flex;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8a38ff 0%, #ec419d 100%);
+}
+
+.calendar-live-link::before {
+  content: "";
+  width: 13px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  box-shadow: 6px 0 0 -2px #fff;
+}
+
+.calendar-reserve-button {
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #8a38ff 0%, #ec419d 100%);
+}
+
+.calendar-reserve-button.is-reminded {
+  color: #877d9e;
+  background: #f4f1fb;
+}
+
+#squareView .section-title {
+  display: none;
+}
+
+#squareView .replay-grid,
+#recordsView #reservationList.learning-card-grid,
+#recordsView #recordList.learning-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#squareView .prototype-card,
+#recordsView .learning-course-card {
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(73, 43, 132, 0.08);
+}
+
+#squareView .prototype-cover,
+#recordsView .learning-course-card .prototype-cover {
+  height: 108px;
+  min-height: 108px;
+  padding: 10px;
+  background: var(--course-cover-bg);
+}
+
+#squareView .prototype-cover-copy,
+#recordsView .learning-course-card .prototype-cover-copy {
+  margin-top: auto;
+}
+
+#squareView .prototype-cover-copy span,
+#recordsView .learning-course-card .prototype-cover-copy span {
+  font-size: 10px;
+}
+
+#squareView .prototype-cover-copy strong,
+#recordsView .learning-course-card .prototype-cover-copy strong {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+#squareView .prototype-card-body,
+#recordsView .learning-course-body {
+  min-height: 76px;
+  padding: 10px 10px 11px;
+}
+
+#squareView .prototype-card-body h4,
+#recordsView .learning-course-body h4 {
+  min-height: 32px;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+#squareView .prototype-card-body .tag-row,
+#recordsView .learning-course-body .tag-row {
+  margin-top: 8px;
+}
+
+.detail-back {
+  margin-bottom: 10px;
+  color: var(--mint-deep);
+  font-size: 12px;
+}
+
+.detail-info-card {
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.detail-video-shell {
+  min-height: 188px;
+}
+
+.detail-info-card > :not(.detail-video-shell) {
+  margin-left: 14px;
+  margin-right: 14px;
+}
+
+.detail-info-card > h3 {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.detail-subtitle,
+.detail-time,
+.detail-list,
+.scenario-list,
+.detail-review-card,
+.review-comment {
+  font-size: 12px;
+}
+
+.detail-section {
+  margin-top: 12px;
+  padding-top: 11px;
+}
+
+.detail-downloads {
+  gap: 8px;
+}
+
+.detail-download-primary,
+.detail-download-secondary,
+.detail-link-button {
+  min-height: 30px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+#recordsView .learning-tabs {
+  margin-bottom: 12px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #efeaff;
+}
+
+#recordsView .learning-tab {
+  min-height: 30px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#recordsView .learning-course-footer {
+  padding: 8px;
+}
+
+#recordsView .learning-card-action {
+  min-height: 30px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#manageView .admin-page-head {
+  margin-bottom: 12px;
+}
+
+#manageView .admin-page-head h3 {
+  font-size: 14px;
+}
+
+#manageView .admin-head-actions {
+  gap: 8px;
+}
+
+#manageView .admin-publish-button,
+#manageView .admin-config-button,
+#manageView .admin-action-button,
+#manageView .primary-button {
+  background: linear-gradient(135deg, #7b45ff 0%, #ec419d 100%);
+}
+
+#manageView .admin-course-list {
+  display: grid;
+  gap: 10px;
+}
+
+#manageView .admin-table-head {
+  display: none;
+}
+
+#manageView .admin-table,
+#manageView .admin-course-row {
+  display: block;
+}
+
+#manageView .admin-course-row {
+  padding: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(73, 43, 132, 0.08);
+}
+
+#manageView .admin-course-main h4 {
+  font-size: 14px;
+}
+
+#manageView .admin-cell,
+#manageView .admin-mobile-assets,
+#manageView .admin-mobile-tags {
+  display: block;
+  font-size: 11px;
+}
+
+#manageView .admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+#manageView .admin-action-button,
+#manageView .admin-icon-action {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+@media (min-width: 391px) {
+  body {
+    place-items: start center;
+    padding: 0;
+  }
+}
