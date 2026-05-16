@@ -429,9 +429,7 @@ function renderAuthState(options = {}) {
   const isLoggedIn = Boolean(state.currentUser);
   $("#authScreen").classList.toggle("is-hidden", isLoggedIn);
   $(".app-shell").classList.toggle("is-locked", !isLoggedIn);
-  const userBadge = $("#userBadge");
-  userBadge.textContent = isLoggedIn ? state.currentUser.username : "未登录";
-  userBadge.dataset.initial = isLoggedIn ? state.currentUser.username.slice(0, 1).toUpperCase() : "?";
+  $("#userBadge").textContent = isLoggedIn ? `${state.currentUser.username} · ${state.isAdmin ? "管理员" : "成员"}` : "未登录";
   renderTabs();
   $$(".view").forEach((view) => view.classList.remove("is-active"));
   $(`#${state.activeTab}View`).classList.add("is-active");
@@ -741,7 +739,7 @@ function renderEventCard(course) {
           <ul class="scenario-list">${course.scenarios.map((item) => `<li>${item}</li>`).join("")}</ul>
         </div>
         <div class="event-card-actions">
-          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer" aria-label="加入会议" title="加入会议"></a>` : `<span></span>`}
+          ${course.liveUrl ? `<a class="inline-link calendar-live-link" href="${course.liveUrl}" target="_blank" rel="noreferrer">加入会议</a>` : `<span></span>`}
           <button class="calendar-reserve-button ${reminded ? "is-reminded" : ""}" type="button" data-action="signup" data-course="${course.id}">${reminded ? "已预约" : "预约"}</button>
         </div>
       </span>
@@ -755,25 +753,25 @@ function renderCourses() {
   const replayCourses = published.sort((a, b) => parseDate(b.startAt) - parseDate(a.startAt));
 
   $("#upcomingCount").textContent = `${replayCourses.length} 门`;
-  $("#upcomingCourses").innerHTML = replayCourses.length ? replayCourses.map((course, index) => renderCourseCard(course, replayCourses.length - index)).join("") : `<div class="empty-state">暂无课程回放</div>`;
+  $("#upcomingCourses").innerHTML = replayCourses.length ? replayCourses.map((course, index) => renderCourseCard(course, replayCourses.length - index - 1)).join("") : `<div class="empty-state">暂无课程回放</div>`;
 }
 
 function renderSquarePositionFilter() {
   const mainPositions = ["运维", "研发", "测试", "产品"];
   const morePositions = POSITION_OPTIONS.filter((position) => !mainPositions.includes(position));
-  const selectedPosition = state.positionFilter;
-  const extraSelected = morePositions.includes(selectedPosition);
+  const extraCount = state.extraPositionFilters.size;
+  const hasSelectedPositions = state.mainPositionFilters.size > 0 || extraCount > 0;
   $("#squarePositionFilter").innerHTML = `
-    <button class="filter-chip ${selectedPosition === "全部" ? "is-active" : ""}" type="button" data-position-filter="全部">全部</button>
-    ${mainPositions.map((position) => `<button class="filter-chip ${selectedPosition === position ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`).join("")}
+    <button class="filter-chip ${!hasSelectedPositions ? "is-active" : ""}" type="button" data-position-filter="全部">全部</button>
+    ${mainPositions.map((position) => `<button class="filter-chip ${state.mainPositionFilters.has(position) ? "is-active" : ""}" type="button" data-position-filter="${position}">${position}</button>`).join("")}
     <span class="square-more-wrap">
-      <button class="filter-chip more-positions ${state.squareMorePositionsVisible || extraSelected ? "is-open" : ""}" id="toggleSquareMorePositions" type="button" aria-expanded="${state.squareMorePositionsVisible}">
-        ${extraSelected ? selectedPosition : "更多岗位"}
+      <button class="filter-chip more-positions ${state.squareMorePositionsVisible ? "is-open" : ""}" id="toggleSquareMorePositions" type="button" aria-expanded="${state.squareMorePositionsVisible}">
+        ${extraCount ? `更多岗位（${extraCount}）` : "更多岗位"}
       </button>
       <span class="more-position-menu square-more-position-menu" id="squareMorePositionChecks" ${state.squareMorePositionsVisible ? "" : "hidden"}>
         ${morePositions.map((position) => `
-          <label class="position-menu-item ${selectedPosition === position ? "is-selected" : ""}">
-            <input type="radio" name="squareExtraPosition" value="${position}" ${selectedPosition === position ? "checked" : ""} data-square-extra-position />
+          <label class="position-menu-item ${state.extraPositionFilters.has(position) ? "is-selected" : ""}">
+            <input type="checkbox" value="${position}" ${state.extraPositionFilters.has(position) ? "checked" : ""} data-square-extra-position />
             <span>${position}</span>
           </label>
         `).join("")}
@@ -783,25 +781,23 @@ function renderSquarePositionFilter() {
 }
 
 function courseMatchesPosition(course, position) {
-  const selected = position || state.positionFilter;
-  if (!selected || selected === "全部") return true;
-  return course.positions.some((item) => item === selected || item.includes(selected) || selected.includes(item));
+  const selected = [
+    ...state.mainPositionFilters,
+    ...state.extraPositionFilters,
+  ];
+  if (!selected.length && position && position !== "全部") selected.push(position);
+  if (!selected.length) return true;
+  return selected.some((target) => course.positions.some((item) => item === target || item.includes(target) || target.includes(item)));
 }
 
 function renderCourseCard(course, issueIndex = 0) {
   const headline = course.content[0] || course.subtitle || course.title;
-  const coverThemes = [
-    "linear-gradient(145deg, #9c35ee, #4d28cf)",
-    "linear-gradient(145deg, #407cf4, #3b2ad1)",
-    "linear-gradient(145deg, #ff6c8d, #d43e9e)",
-    "linear-gradient(145deg, #56d5b7, #238eaa)",
-  ];
+  const coverThemes = ["#25385f", "#4a2507", "#233f12", "#3b1225", "#102f37", "#442d11"];
 
   return `
     <article class="course-card replay-tile prototype-card" id="course-${course.id}" data-action="courseDetail" data-course="${course.id}" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
       <div class="prototype-cover">
         <div class="prototype-cover-copy">
-          <span>第${issueIndex}期</span>
           <strong>${headline}</strong>
         </div>
       </div>
@@ -835,12 +831,12 @@ function renderCourseDetailPage(course) {
   const reviews = state.ratingDetails[course.id] || [];
   const average = reviews.length ? reviews.reduce((sum, item) => sum + Number(item.score || 0), 0) / reviews.length : 0;
   return `
+    <div class="detail-video-shell">
+      ${course.replayUrl && isVideoUrl(course.replayUrl)
+        ? `<video class="detail-video" src="${course.replayUrl}" controls playsinline poster="${course.coverUrl || ""}"></video>`
+        : `<div class="detail-video-placeholder" ${coverStyle(course)}><span>${course.replayUrl ? "第三方回放链接" : "回放上传中"}</span></div>`}
+    </div>
     <article class="detail-info-card">
-      <div class="detail-video-shell">
-        ${course.replayUrl && isVideoUrl(course.replayUrl)
-          ? `<video class="detail-video" src="${course.replayUrl}" controls playsinline poster="${course.coverUrl || ""}"></video>`
-          : `<div class="detail-video-placeholder" ${coverStyle(course)}><span>${course.replayUrl ? "第三方回放链接" : "回放上传中"}</span></div>`}
-      </div>
       <h3 id="courseDetailTitle">${course.title}</h3>
       <p class="detail-subtitle">${course.subtitle}</p>
       <p class="detail-time">◷ ${formatFullTime(course)}</p>
@@ -864,7 +860,8 @@ function renderCourseDetailPage(course) {
         <button class="detail-download-secondary" type="button" data-action="downloadVideo" data-course="${course.id}" ${course.replayUrl ? "" : 'disabled title="视频上传中"'}>下载视频</button>
         ${course.replayUrl && !isVideoUrl(course.replayUrl) ? `<button class="detail-link-button" type="button" data-action="replay" data-course="${course.id}">打开回放链接</button>` : ""}
       </div>
-      <section class="detail-review-card">
+    </article>
+    <article class="detail-review-card">
       <div class="detail-review-head">
         <h3>课程评价<span>（${reviews.length}条）</span></h3>
         <strong>${average ? average.toFixed(1) : "0.0"} <span>★★★★★</span></strong>
@@ -872,7 +869,6 @@ function renderCourseDetailPage(course) {
       <div class="detail-review-list">
         ${reviews.length ? reviews.map(renderCourseReview).join("") : `<p class="empty-review">暂无评价</p>`}
       </div>
-      </section>
     </article>
   `;
 }
@@ -913,7 +909,7 @@ function renderRecords() {
   $("#learnedCount").textContent = records.length;
   $("#learnedHours").textContent = formatLearningDuration(totalMs);
   $$(".learning-tab").forEach((button) => button.classList.toggle("is-active", button.dataset.recordMode === state.recordMode));
-  $("#learningStats").hidden = true;
+  $("#learningStats").hidden = state.recordMode !== "learning";
   $("#reservationList").hidden = state.recordMode !== "reservations";
   $("#recordList").hidden = state.recordMode !== "learning";
   $("#reservationList").innerHTML = reservations.length
@@ -934,12 +930,7 @@ function formatLearningDuration(totalMs) {
 
 function renderLearningCourseCard(course, { type, issueIndex }) {
   const rating = state.ratings[course.id] || 0;
-  const coverThemes = [
-    "linear-gradient(145deg, #9c35ee, #4d28cf)",
-    "linear-gradient(145deg, #407cf4, #3b2ad1)",
-    "linear-gradient(145deg, #ff6c8d, #d43e9e)",
-    "linear-gradient(145deg, #56d5b7, #238eaa)",
-  ];
+  const coverThemes = ["#25385f", "#4a2507", "#233f12", "#3b1225", "#102f37", "#442d11"];
   const action = type === "reservation"
     ? `<button class="learning-card-action" type="button" data-action="cancelReminder" data-course="${course.id}">取消预约</button>`
     : `<button class="learning-card-action ${rating ? "is-rated" : ""}" type="button" data-action="openRating" data-course="${course.id}">${rating ? "查看评价" : "点评"}</button>`;
@@ -947,7 +938,6 @@ function renderLearningCourseCard(course, { type, issueIndex }) {
     <article class="learning-course-card" style="--course-cover-bg: ${coverThemes[issueIndex % coverThemes.length]}">
       <div class="prototype-cover">
         <div class="prototype-cover-copy">
-          <span>第${issueIndex}期</span>
           <strong>${course.content[0] || course.subtitle}</strong>
         </div>
       </div>
@@ -1854,21 +1844,32 @@ function bindEvents() {
     if (!button) return;
     event.stopPropagation();
     const position = button.dataset.positionFilter;
-    state.mainPositionFilters.clear();
-    state.extraPositionFilters.clear();
-    state.positionFilter = position;
-    state.squareMorePositionsVisible = false;
+    if (position === "全部") {
+      state.mainPositionFilters.clear();
+      state.extraPositionFilters.clear();
+      state.positionFilter = "全部";
+      state.squareMorePositionsVisible = false;
+      renderCourses();
+      return;
+    }
+    if (state.mainPositionFilters.has(position)) {
+      state.mainPositionFilters.delete(position);
+    } else {
+      state.mainPositionFilters.add(position);
+    }
+    state.positionFilter = state.mainPositionFilters.size || state.extraPositionFilters.size ? "自定义" : "全部";
     renderCourses();
   });
   $("#squarePositionFilter").addEventListener("change", (event) => {
     const input = event.target.closest("[data-square-extra-position]");
     if (!input) return;
     event.stopPropagation();
-    state.mainPositionFilters.clear();
-    state.extraPositionFilters.clear();
-    if (input.checked) state.extraPositionFilters.add(input.value);
-    state.positionFilter = input.value;
-    state.squareMorePositionsVisible = false;
+    if (input.checked) {
+      state.extraPositionFilters.add(input.value);
+    } else {
+      state.extraPositionFilters.delete(input.value);
+    }
+    state.positionFilter = state.mainPositionFilters.size || state.extraPositionFilters.size ? "自定义" : "全部";
     renderCourses();
   });
 
